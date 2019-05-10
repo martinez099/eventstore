@@ -4,9 +4,9 @@ import uuid
 
 import grpc
 
-from event_store.event_store_pb2 import PublishRequest, FindOneRequest, FindAllRequest, ActivateEntityCacheRequest, \
+from event_store_pb2 import PublishRequest, FindOneRequest, FindAllRequest, ActivateEntityCacheRequest, \
     DeactivateEntityCacheRequest, SubscribeRequest
-from event_store.event_store_pb2_grpc import EventStoreStub
+from event_store_pb2_grpc import EventStoreStub
 
 
 EVENT_STORE_ADDRESS = 'event-store:50051'
