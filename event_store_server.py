@@ -1,5 +1,6 @@
 import functools
 import json
+import logging
 import threading
 import time
 from concurrent import futures
@@ -338,17 +339,18 @@ def serve():
         server.add_insecure_port(EVENT_STORE_ADDRESS)
         server.start()
     except Exception as e:
-        log_error(e)
+        logging.log(logging.ERROR, str(e))
 
-    log_info('serving ...')
+    logging.log(logging.INFO, 'serving ...')
     try:
         while True:
             time.sleep(EVENT_STORE_SLEEP_INTERVAL)
     except KeyboardInterrupt:
         server.stop(EVENT_STORE_GRACE_INTERVAL)
 
-    log_info('done')
+    logging.log(logging.INFO, 'done')
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     serve()
