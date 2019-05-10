@@ -8,7 +8,7 @@ from concurrent import futures
 import grpc
 from redis import StrictRedis
 
-from domain_model import DomainModel
+from domainmodel.domain_model import DomainModel
 from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, FindAllResponse, \
     FindOneResponse, ActivateEntityCacheResponse, DeactivateEntityCacheResponse
 from event_store_pb2_grpc import EventStoreServicer, add_EventStoreServicer_to_server
