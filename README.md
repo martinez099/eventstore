@@ -1,2 +1,2 @@
-# event-store
+# eventstore
 An event store using Redis.
