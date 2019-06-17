@@ -1,4 +1,5 @@
 import json
+import os
 import threading
 import uuid
 
@@ -9,7 +10,8 @@ from event_store_pb2 import PublishRequest, FindOneRequest, FindAllRequest, Acti
 from event_store_pb2_grpc import EventStoreStub
 
 
-EVENT_STORE_ADDRESS = 'event-store:50051'
+EVENT_STORE_HOST = os.getenv('EVENT_STORE_HOST', 'localhost')
+EVENT_STORE_ADDRESS = EVENT_STORE_HOST + ':50051'
 
 
 class EventStore(object):

@@ -1,6 +1,7 @@
 import functools
 import json
 import logging
+import os
 import threading
 import time
 from concurrent import futures
@@ -14,13 +15,16 @@ from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, 
 from event_store_pb2_grpc import EventStoreServicer, add_EventStoreServicer_to_server
 
 
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+
+
 class EventStore(EventStoreServicer):
     """
     Event Store class.
     """
 
     def __init__(self):
-        self.redis = StrictRedis(decode_responses=True, host='redis')
+        self.redis = StrictRedis(decode_responses=True, host=REDIS_HOST)
         self.subscribers = {}
         self.entity_cache_handlers = {}
         self.domain_model = DomainModel(self.redis)
