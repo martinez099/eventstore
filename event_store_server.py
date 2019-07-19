@@ -349,7 +349,7 @@ def serve():
     try:
         while True:
             time.sleep(EVENT_STORE_SLEEP_INTERVAL)
-    except KeyboardInterrupt:
+    except (InterruptedError, KeyboardInterrupt):
         server.stop(EVENT_STORE_GRACE_INTERVAL)
 
     logging.log(logging.INFO, 'done')
