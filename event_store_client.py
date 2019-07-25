@@ -11,7 +11,8 @@ from event_store_pb2_grpc import EventStoreStub
 
 
 EVENT_STORE_HOST = os.getenv('EVENT_STORE_HOST', 'localhost')
-EVENT_STORE_ADDRESS = EVENT_STORE_HOST + ':50051'
+EVENT_STORE_PORT = os.getenv('EVENT_STORE_PORT', '50051')
+EVENT_STORE_ADDRESS = '{}:{}'.format(EVENT_STORE_HOST, EVENT_STORE_PORT)
 
 
 class EventStore(object):

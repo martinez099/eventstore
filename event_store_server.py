@@ -15,16 +15,13 @@ from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, 
 from event_store_pb2_grpc import EventStoreServicer, add_EventStoreServicer_to_server
 
 
-REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
-
-
 class EventStore(EventStoreServicer):
     """
     Event Store class.
     """
 
     def __init__(self):
-        self.redis = StrictRedis(decode_responses=True, host=REDIS_HOST)
+        self.redis = StrictRedis(decode_responses=True, host=EVENT_STORE_REDIS_HOST)
         self.subscribers = {}
         self.entity_cache_handlers = {}
         self.domain_model = DomainModel(self.redis)
@@ -327,8 +324,11 @@ class Subscriber(threading.Thread):
         self.handlers.remove(_handler)
 
 
-EVENT_STORE_ADDRESS = '[::]:50051'
-EVENT_STORE_THREADS = 10
+EVENT_STORE_REDIS_HOST = os.getenv('EVENT_STORE_REDIS_HOST', 'localhost')
+EVENT_STORE_LISTEN_PORT = os.getenv('EVENT_STORE_LISTEN_PORT', '50051')
+EVENT_STORE_MAX_WORKERS = int(os.getenv('EVENT_STORE_MAX_WORKERS', '10'))
+
+EVENT_STORE_ADDRESS = '[::]:{}'.format(EVENT_STORE_LISTEN_PORT)
 EVENT_STORE_SLEEP_INTERVAL = 60 * 60 * 24
 EVENT_STORE_GRACE_INTERVAL = 0
 
@@ -337,7 +337,7 @@ def serve():
     """
     Run the gRPC server.
     """
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=EVENT_STORE_THREADS))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=EVENT_STORE_MAX_WORKERS))
     try:
         add_EventStoreServicer_to_server(EventStore(), server)
         server.add_insecure_port(EVENT_STORE_ADDRESS)
