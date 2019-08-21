@@ -10,18 +10,14 @@ from event_store_pb2 import PublishRequest, FindOneRequest, FindAllRequest, Acti
 from event_store_pb2_grpc import EventStoreStub
 
 
-EVENT_STORE_HOST = os.getenv('EVENT_STORE_HOST', 'localhost')
-EVENT_STORE_PORT = os.getenv('EVENT_STORE_PORT', '50051')
-EVENT_STORE_ADDRESS = '{}:{}'.format(EVENT_STORE_HOST, EVENT_STORE_PORT)
-
-
 class EventStore(object):
     """
     Event Store class.
     """
 
     def __init__(self):
-        self.channel = grpc.insecure_channel(EVENT_STORE_ADDRESS)
+        self.channel = grpc.insecure_channel('{}:{}'.format(os.getenv('EVENT_STORE_HOST', 'localhost'),
+                                                            os.getenv('EVENT_STORE_PORT', '50051')))
         self.stub = EventStoreStub(self.channel)
         self.subscribers = {}
 
