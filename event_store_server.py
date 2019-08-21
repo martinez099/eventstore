@@ -343,16 +343,16 @@ def serve():
         server.add_insecure_port(EVENT_STORE_ADDRESS)
         server.start()
     except Exception as e:
-        logging.log(logging.ERROR, str(e))
+        logging.error(e)
 
-    logging.log(logging.INFO, 'serving ...')
+    logging.info('serving ...')
     try:
         while True:
             time.sleep(EVENT_STORE_SLEEP_INTERVAL)
     except (InterruptedError, KeyboardInterrupt):
         server.stop(EVENT_STORE_GRACE_INTERVAL)
 
-    logging.log(logging.INFO, 'done')
+    logging.info('done.')
 
 
 if __name__ == '__main__':
