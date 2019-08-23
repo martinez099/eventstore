@@ -16,8 +16,8 @@ class EventStore(object):
     """
 
     def __init__(self):
-        self.channel = grpc.insecure_channel('{}:{}'.format(os.getenv('EVENT_STORE_HOST', 'localhost'),
-                                                            os.getenv('EVENT_STORE_PORT', '50051')))
+        host, port = os.getenv('EVENT_STORE_HOSTNAME', 'localhost'), os.getenv('EVENT_STORE_PORTNR', '50051')
+        self.channel = grpc.insecure_channel('{}:{}'.format(host, port))
         self.stub = EventStoreStub(self.channel)
         self.subscribers = {}
 
