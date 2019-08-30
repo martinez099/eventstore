@@ -148,7 +148,7 @@ class EventStore(EventStoreServicer):
             return dict(map(lambda x: (x['id'], x), entities))
 
         def _remove_deleted(_created, _deleted):
-            for d in _deleted.values():
+            for d in _deleted.keys():
                 del _created[d]
             return _created
 
