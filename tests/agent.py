@@ -4,7 +4,7 @@ import random
 import string
 import time
 
-from event_store_client import EventStore
+from event_store_client import EventStoreClient
 
 
 def get_any_id(_entities, _but=None):
@@ -94,7 +94,7 @@ def create_product():
     }
 
 
-es = EventStore()
+es = EventStoreClient()
 es.activate_entity_cache('order')
 es.activate_entity_cache('product')
 es.activate_entity_cache('customer')
@@ -125,10 +125,13 @@ for billing in billings:
 
 def order_service():
 
+    order = es.find_one('order', orders[0]['id'])
+
+    print(order)
+
     for i in range(0, 100):
         es.publish('order', 'deleted', **orders[i])
 
-    es.find_one('order', orders[0]['id'])
     es.find_one('order', orders[1]['id'])
     es.find_one('order', orders[2]['id'])
     es.find_one('order', orders[3]['id'])

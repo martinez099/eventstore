@@ -1,30 +1,26 @@
-import functools
 import json
 import logging
 import os
-import threading
 import time
 from concurrent import futures
 
 import grpc
-from redis import StrictRedis
 
-from domainmodel.domain_model import DomainModel
+from event_store import EventStore
+
 from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, FindAllResponse, \
     FindOneResponse, ActivateEntityCacheResponse, DeactivateEntityCacheResponse
 from event_store_pb2_grpc import EventStoreServicer, add_EventStoreServicer_to_server
 
 
-class EventStore(EventStoreServicer):
+class EventStoreServer(EventStoreServicer):
     """
-    Event Store class.
+    Event Store Server class.
     """
 
     def __init__(self):
-        self.redis = StrictRedis(decode_responses=True, host=EVENT_STORE_REDIS_HOST)
+        self.es = EventStore(EVENT_STORE_REDIS_HOST)
         self.subscribers = {}
-        self.entity_cache_handlers = {}
-        self.domain_model = DomainModel(self.redis)
 
     def publish(self, request, context):
         """
@@ -32,14 +28,9 @@ class EventStore(EventStoreServicer):
 
         :param request: The client request.
         :param context: The client context.
-        :return: The entry ID.
+        :return: PublishResponse
         """
-        key = 'events:{{{0}}}_{1}'.format(request.event_topic, request.event_action)
-        entry_id = self.redis.xadd(
-            key,
-            {'event_id': request.event_id, 'event_entity': request.event_entity},
-            id='{0:.6f}'.format(time.time()).replace('.', '-')
-        )
+        entry_id = self.es.publish(request.event_id, request.event_topic, request.event_action, request.event_entity)
 
         return PublishResponse(entry_id=entry_id)
 
@@ -52,10 +43,9 @@ class EventStore(EventStoreServicer):
         """
         self.subscribers[(request.event_topic, request.event_action, context.peer())] = True
 
-        key = 'events:{{{0}}}_{1}'.format(request.event_topic, request.event_action)
         last_id = '$'
         while self.subscribers[(request.event_topic, request.event_action, context.peer())]:
-            items = self.redis.xread({key: last_id}, block=1000) or []
+            items = self.es.read(last_id, request.event_topic, request.event_action) or []
             for item in items:
                 last_id = item[1][0][0]
                 yield Notification(
@@ -80,11 +70,11 @@ class EventStore(EventStoreServicer):
         """
         Find an entity for a topic with an specific id.
 
-        :param _topic: The event topic, i.e. name of entity.
-        :param _id: The entity id.
+        :param request: The client request.
+        :param context: The client context.
         :return: A dict with the entity.
         """
-        entity = self._find_all(request.event_topic).get(request.event_id)
+        entity = self.es.find_one(request.event_topic, request.event_id)
 
         return FindOneResponse(entity=json.dumps(entity) if entity else None)
 
@@ -92,10 +82,11 @@ class EventStore(EventStoreServicer):
         """
         Find all entites for a topic.
 
-        :param _topic: The event topic, i.e name of entity.
+        :param request: The client request.
+        :param context: The client context.
         :return: A list with all entitys.
         """
-        entities = self._find_all(request.event_topic).values()
+        entities = self.es.find_all(request.event_topic)
 
         return FindAllResponse(entities=json.dumps(list(entities)) if entities else None)
 
@@ -103,19 +94,10 @@ class EventStore(EventStoreServicer):
         """
         Keep entity cache up to date.
 
-        :param _topic: The entity type.
+        :param request: The client request.
+        :param context: The client context.
         """
-        created_handler = functools.partial(self._entity_created, request.event_topic)
-        self.entity_cache_handlers[(request.event_topic, 'created')] = created_handler
-        self._subscribe(request.event_topic, 'created', created_handler)
-
-        deleted_handler = functools.partial(self._entity_deleted, request.event_topic)
-        self.entity_cache_handlers[(request.event_topic, 'deleted')] = deleted_handler
-        self._subscribe(request.event_topic, 'deleted', deleted_handler)
-
-        updated_handler = functools.partial(self._entity_updated, request.event_topic)
-        self.entity_cache_handlers[(request.event_topic, 'updated')] = updated_handler
-        self._subscribe(request.event_topic, 'updated', updated_handler)
+        self.es.activate_entity_cache(request.event_topic)
 
         return ActivateEntityCacheResponse()
 
@@ -123,205 +105,12 @@ class EventStore(EventStoreServicer):
         """
         Stop keeping entity cache up to date.
 
-        :param _topic: The entity type.
+        :param request: The client request.
+        :param context: The client context.
         """
-        created_handler = self.entity_cache_handlers[(request.event_topic, 'created')]
-        self._unsubscribe(request.event_topic, 'created', created_handler)
-
-        deleted_handler = self.entity_cache_handlers[(request.event_topic, 'deleted')]
-        self._unsubscribe(request.event_topic, 'deleted', deleted_handler)
-
-        updated_handler = self.entity_cache_handlers[(request.event_topic, 'updated')]
-        self._unsubscribe(request.event_topic, 'updated', updated_handler)
+        self.es.deactivate_entity_cache(request.event_topic)
 
         return DeactivateEntityCacheResponse()
-
-    def _find_all(self, _topic):
-        """
-        Find all entites for a topic.
-
-        :param _topic: The event topic, i.e name of entity.
-        :return: A dict mapping id -> entity.
-        """
-        def _get_entities(_events):
-            entities = map(lambda x: json.loads(x[1]['event_entity']), _events)
-            return dict(map(lambda x: (x['id'], x), entities))
-
-        def _remove_deleted(_created, _deleted):
-            for d in _deleted.keys():
-                del _created[d]
-            return _created
-
-        def _set_updated(_created, _updated):
-            for k, v in _updated.items():
-                _created[k] = v
-            return _created
-
-        # read from cache
-        if self.domain_model.exists(_topic):
-            return self.domain_model.retrieve(_topic)
-
-        # result is a dict mapping id -> entity
-        result = {}
-
-        # read all events at once
-        with self.redis.pipeline() as pipe:
-            pipe.multi()
-            pipe.xrange('events:{{{0}}}_created'.format(_topic))
-            pipe.xrange('events:{{{0}}}_deleted'.format(_topic))
-            pipe.xrange('events:{{{0}}}_updated'.format(_topic))
-            created_events, deleted_events, updated_events = pipe.execute()
-
-        # get created entities
-        if created_events:
-            result = _get_entities(created_events)
-
-        # remove deleted entities
-        if deleted_events:
-            result = _remove_deleted(result, _get_entities(deleted_events))
-
-        # set updated entities
-        if updated_events:
-            result = _set_updated(result, _get_entities(updated_events))
-
-        # write into cache
-        for value in result.values():
-            self.domain_model.create(_topic, value)
-
-        return result
-
-    def _entity_created(self, _topic, _item):
-        """
-        Event handler for entity created events, i.e. create a cached entity.
-
-        :param _topic: The entity type.
-        :param _item: A dict with entity properties.
-        """
-        if self.domain_model.exists(_topic):
-            entity = json.loads(_item[1][0][1]['event_entity'])
-            self.domain_model.create(_topic, entity)
-
-    def _entity_deleted(self, _topic, _item):
-        """
-        Event handler for entity deleted events, i.e. delete a cached entity.
-
-        :param _topic: The entity type.
-        :param _item: A dict with entity properties.
-        """
-        if self.domain_model.exists(_topic):
-            entity = json.loads(_item[1][0][1]['event_entity'])
-            self.domain_model.delete(_topic, entity)
-
-    def _entity_updated(self, _topic, _item):
-        """
-        Event handler for entity updated events, i.e. update a cached entity.
-
-        :param _topic: The entity type.
-        :param _item: A dict with entity properties.
-        """
-        if self.domain_model.exists(_topic):
-            entity = json.loads(_item[1][0][1]['event_entity'])
-            self.domain_model.update(_topic, entity)
-
-    def _subscribe(self, _topic, _action, _handler):
-        """
-        Subscribe to an event channel.
-
-        :param _topic: The event topic.
-        :param _action: The event action.
-        :param _handler: The event handler.
-        :return: Success.
-        """
-        if (_topic, _action) in self.subscribers:
-            self.subscribers[(_topic, _action)].add_handler(_handler)
-        else:
-            subscriber = Subscriber(_topic, _action, _handler, self.redis)
-            subscriber.start()
-            self.subscribers[(_topic, _action)] = subscriber
-
-        return True
-
-    def _unsubscribe(self, _topic, _action, _handler):
-        """
-        Unsubscribe from an event channel.
-
-        :param _topic: The event topic.
-        :param _action: The event action.
-        :param _handler: The event handler.
-        :return: Success.
-        """
-        subscriber = self.subscribers.get((_topic, _action))
-        if not subscriber:
-            return False
-
-        subscriber.rem_handler(_handler)
-        if not subscriber:
-            subscriber.stop()
-            del self.subscribers[(_topic, _action)]
-
-        return True
-
-
-class Subscriber(threading.Thread):
-    """
-    Subscriber Thread class.
-    """
-
-    def __init__(self, _topic, _action, _handler, _redis):
-        """
-        :param _topic: The topic to subscirbe to.
-        :param _action: The action to scubscribe to.
-        :param _handler: A handler function.
-        :param _redis: A Redis instance.
-        """
-        super(Subscriber, self).__init__()
-        self._running = False
-        self.key = 'events:{{{0}}}_{1}'.format(_topic, _action)
-        self.subscribed = True
-        self.handlers = [_handler]
-        self.redis = _redis
-
-    def __len__(self):
-        return len(self.handlers)
-
-    def run(self):
-        """
-        Poll the event stream and call each handler with each entry returned.
-        """
-        if self._running:
-            return
-
-        last_id = '$'
-        self._running = True
-        while self.subscribed:
-            items = self.redis.xread({self.key: last_id}, block=1000) or []
-            for item in items:
-                for handler in self.handlers:
-                    handler(item)
-                last_id = item[1][0][0]
-        self._running = False
-
-    def stop(self):
-        """
-        Stop polling the event stream.
-        """
-        self.subscribed = False
-
-    def add_handler(self, _handler):
-        """
-        Add an event handler.
-
-        :param _handler: The event handler function.
-        """
-        self.handlers.append(_handler)
-
-    def rem_handler(self, _handler):
-        """
-        Remove an event handler.
-
-        :param _handler: The event handler function.
-        """
-        self.handlers.remove(_handler)
 
 
 EVENT_STORE_REDIS_HOST = os.getenv('EVENT_STORE_REDIS_HOST', 'localhost')
@@ -339,7 +128,7 @@ def serve():
     """
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=EVENT_STORE_MAX_WORKERS))
     try:
-        add_EventStoreServicer_to_server(EventStore(), server)
+        add_EventStoreServicer_to_server(EventStoreServer(), server)
         server.add_insecure_port(EVENT_STORE_ADDRESS)
         server.start()
     except Exception as e:

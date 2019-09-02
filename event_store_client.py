@@ -10,9 +10,9 @@ from event_store_pb2 import PublishRequest, FindOneRequest, FindAllRequest, Acti
 from event_store_pb2_grpc import EventStoreStub
 
 
-class EventStore(object):
+class EventStoreClient(object):
     """
-    Event Store class.
+    Event Store Client class.
     """
 
     def __init__(self):
