@@ -88,7 +88,7 @@ class EventStoreServer(EventStoreServicer):
         """
         entities = self.core.find_all(request.event_topic)
 
-        return FindAllResponse(entities=json.dumps(list(entities)) if entities else None)
+        return FindAllResponse(entities=json.dumps(entities) if entities else None)
 
     def activate_entity_cache(self, request, context):
         """
