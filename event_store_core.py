@@ -84,9 +84,9 @@ class EventStore(object):
         """
         Read new event stream entries.
 
-        :param _last_id:
-        :param _topic:
-        :param _action:
+        :param _last_id: The ID of the last entry read.
+        :param _topic: The event topic.
+        :param _action: The event action.
         :return: A list of event entries or None.
         """
         key = 'events:{{{0}}}_{1}'.format(_topic, _action)

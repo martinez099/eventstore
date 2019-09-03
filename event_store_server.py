@@ -6,7 +6,7 @@ from concurrent import futures
 
 import grpc
 
-from event_store import EventStore
+from event_store_core import EventStore
 
 from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, FindAllResponse, \
     FindOneResponse, ActivateEntityCacheResponse, DeactivateEntityCacheResponse
@@ -19,7 +19,7 @@ class EventStoreServer(EventStoreServicer):
     """
 
     def __init__(self):
-        self.es = EventStore(EVENT_STORE_REDIS_HOST)
+        self.core = EventStore(EVENT_STORE_REDIS_HOST)
         self.subscribers = {}
 
     def publish(self, request, context):
@@ -30,7 +30,7 @@ class EventStoreServer(EventStoreServicer):
         :param context: The client context.
         :return: PublishResponse
         """
-        entry_id = self.es.publish(request.event_id, request.event_topic, request.event_action, request.event_entity)
+        entry_id = self.core.publish(request.event_id, request.event_topic, request.event_action, request.event_entity)
 
         return PublishResponse(entry_id=entry_id)
 
@@ -45,7 +45,7 @@ class EventStoreServer(EventStoreServicer):
 
         last_id = '$'
         while self.subscribers[(request.event_topic, request.event_action, context.peer())]:
-            items = self.es.read(last_id, request.event_topic, request.event_action) or []
+            items = self.core.read(last_id, request.event_topic, request.event_action) or []
             for item in items:
                 last_id = item[1][0][0]
                 yield Notification(
@@ -74,7 +74,7 @@ class EventStoreServer(EventStoreServicer):
         :param context: The client context.
         :return: A dict with the entity.
         """
-        entity = self.es.find_one(request.event_topic, request.event_id)
+        entity = self.core.find_one(request.event_topic, request.event_id)
 
         return FindOneResponse(entity=json.dumps(entity) if entity else None)
 
@@ -86,7 +86,7 @@ class EventStoreServer(EventStoreServicer):
         :param context: The client context.
         :return: A list with all entitys.
         """
-        entities = self.es.find_all(request.event_topic)
+        entities = self.core.find_all(request.event_topic)
 
         return FindAllResponse(entities=json.dumps(list(entities)) if entities else None)
 
@@ -97,7 +97,7 @@ class EventStoreServer(EventStoreServicer):
         :param request: The client request.
         :param context: The client context.
         """
-        self.es.activate_entity_cache(request.event_topic)
+        self.core.activate_entity_cache(request.event_topic)
 
         return ActivateEntityCacheResponse()
 
@@ -108,7 +108,7 @@ class EventStoreServer(EventStoreServicer):
         :param request: The client request.
         :param context: The client context.
         """
-        self.es.deactivate_entity_cache(request.event_topic)
+        self.core.deactivate_entity_cache(request.event_topic)
 
         return DeactivateEntityCacheResponse()
 
