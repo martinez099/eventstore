@@ -125,15 +125,15 @@ for billing in billings:
 
 def order_service():
 
-    order = es.find_one('order', orders[0]['id'])
+    result = es.find_one('order', orders[0]['id'])
+    assert result
 
-    print(order)
+    result = es.find_all('order')
+    assert result
 
-    for i in range(0, 100):
-        es.publish('order', 'deleted', **orders[i])
-
-    found = es.find_one('order', orders[1]['id'])
-    assert not found
+    es.publish('order', 'deleted', **orders[0])
+    result = es.find_one('order', orders[0]['id'])
+    assert not result
 
 
 t1 = threading.Thread(target=order_service)
