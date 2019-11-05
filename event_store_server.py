@@ -45,14 +45,14 @@ class EventStoreServer(EventStoreServicer):
 
         last_id = '$'
         while self.subscribers[(request.event_topic, request.event_action, context.peer())]:
-            items = self.core.read(last_id, request.event_topic, request.event_action) or []
-            for item in items:
-                last_id = item[1][0][0]
-                yield Notification(
-                    event_id=item[1][0][1]['event_id'],
-                    event_ts=float(last_id.replace('-', '.')),
-                    event_entity=item[1][0][1]['event_entity']
-                )
+            for stream_name, entries in self.core.read(last_id, request.event_topic, request.event_action):
+                for entry_id, entry in entries:
+                    last_id = entry_id
+                    yield Notification(
+                        event_id=entry['event_id'],
+                        event_ts=float(last_id.replace('-', '.')),
+                        event_entity=entry['event_entity']
+                    )
 
     def unsubscribe(self, request, context):
         """

@@ -132,15 +132,8 @@ def order_service():
     for i in range(0, 100):
         es.publish('order', 'deleted', **orders[i])
 
-    es.find_one('order', orders[1]['id'])
-    es.find_one('order', orders[2]['id'])
-    es.find_one('order', orders[3]['id'])
-    es.find_one('order', orders[4]['id'])
-    es.find_one('order', orders[5]['id'])
-    es.find_one('order', orders[6]['id'])
-    es.find_one('order', orders[7]['id'])
-    es.find_one('order', orders[8]['id'])
-    es.find_one('order', orders[9]['id'])
+    found = es.find_one('order', orders[1]['id'])
+    assert not found
 
 
 t1 = threading.Thread(target=order_service)
