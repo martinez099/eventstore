@@ -32,7 +32,12 @@ class EventStoreStub(object):
     self.get_all = channel.unary_unary(
         '/eventstore.EventStore/get_all',
         request_serializer=event__store__pb2.GetAllRequest.SerializeToString,
-        response_deserializer=event__store__pb2.GetAllResponse.FromString,
+        response_deserializer=event__store__pb2.GetResponse.FromString,
+        )
+    self.get_action = channel.unary_unary(
+        '/eventstore.EventStore/get_action',
+        request_serializer=event__store__pb2.GetActionRequest.SerializeToString,
+        response_deserializer=event__store__pb2.GetResponse.FromString,
         )
 
 
@@ -68,6 +73,13 @@ class EventStoreServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def get_action(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_EventStoreServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -89,7 +101,12 @@ def add_EventStoreServicer_to_server(servicer, server):
       'get_all': grpc.unary_unary_rpc_method_handler(
           servicer.get_all,
           request_deserializer=event__store__pb2.GetAllRequest.FromString,
-          response_serializer=event__store__pb2.GetAllResponse.SerializeToString,
+          response_serializer=event__store__pb2.GetResponse.SerializeToString,
+      ),
+      'get_action': grpc.unary_unary_rpc_method_handler(
+          servicer.get_action,
+          request_deserializer=event__store__pb2.GetActionRequest.FromString,
+          response_serializer=event__store__pb2.GetResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

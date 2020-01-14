@@ -95,21 +95,6 @@ def create_product():
     }
 
 
-def create_event(_action, _data):
-    """
-    Create an event.
-
-    :param _action: The action happened.
-    :param _data: The data describing the action.
-    :return: A dict with the event properties.
-    """
-    return {
-        'event_id': str(uuid.uuid4()),
-        'event_action': _action,
-        'event_data': json.dumps(_data)
-    }
-
-
 es = EventStoreClient()
 
 customers = [create_customer() for _ in range(0, 100)]
@@ -119,37 +104,39 @@ orders = [create_order(customers, products) for _ in range(0, 100)]
 billings = [create_billing(order['id']) for order in orders]
 
 for customer in customers:
-    es.publish('customer', create_event('created', customer))
+    es.publish('customer', 'created', customer)
 
 for product in products:
-    es.publish('product', create_event('created', product))
+    es.publish('product', 'created', product)
 
 for inventory in inventory:
-    es.publish('inventory', create_event('created', inventory))
+    es.publish('inventory', 'created', inventory)
 
 for order in orders:
-    es.publish('order', create_event('created', order))
+    es.publish('order', 'created', order)
 
 for billing in billings:
-    es.publish('billing', create_event('created', billing))
+    es.publish('billing', 'created', billing)
 
 
 def order_service():
 
     # delete first order
-    es.publish('order', create_event('deleted', orders[0]))
+    es.publish('order', 'deleted', orders[0])
 
     # get all order events
-    all_order_events = es.get_all('order')
+    all_order_events = es.get('order')
 
     # filter 'created' events
-    created = filter(lambda x: x[1]['event_action'] == 'created', all_order_events)
+    created = es.get('order', _action='created')
 
     # filter 'deleted' events
-    deleted = list(filter(lambda x: x[1]['event_action'] == 'deleted', all_order_events))
+    deleted = es.get('order', _action='deleted')
 
     # filter current order entities
-    result = filter(lambda r: json.loads(r[1]['event_data'])['id'] not in map(lambda y: json.loads(y[1]['event_data'])['id'], deleted), created)
+    result = filter(lambda r: json.loads(r[1]['event_data'])['id']
+                    not in map(lambda y: json.loads(y[1]['event_data'])['id'], deleted),
+                    created)
 
     assert len(list(result)) == 99
 

@@ -8,7 +8,7 @@ import grpc
 
 from event_store_core import EventStore
 
-from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, GetAllResponse
+from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, GetResponse
 from event_store_pb2_grpc import EventStoreServicer, add_EventStoreServicer_to_server
 
 
@@ -29,7 +29,7 @@ class EventStoreServer(EventStoreServicer):
         :param context: The client context.
         :return: An entry ID.
         """
-        entry_id = self.core.publish(request.event_topic, json.loads(request.event_data))
+        entry_id = self.core.publish(request.event_topic, request.event_action, json.loads(request.event_data))
 
         return PublishResponse(entry_id=entry_id)
 
@@ -69,15 +69,27 @@ class EventStoreServer(EventStoreServicer):
 
     def get_all(self, request, context):
         """
-        Get all entites for a topic.
+        Get all events for a topic.
 
         :param request: The client request.
         :param context: The client context.
         :return: A list with all entitiess or None.
         """
-        events = self.core.get_all(request.event_topic)
+        events = self.core.get(request.event_topic)
 
-        return GetAllResponse(events=json.dumps(events) if events else None)
+        return GetResponse(events=json.dumps(events) if events else None)
+
+    def get_action(self, request, context):
+        """
+        Get events for a topic with a given action.
+
+        :param request: The client request.
+        :param context: The client context.
+        :return: A list with all entitiess with a given action or None.
+        """
+        events = self.core.get(request.event_topic, _action=request.event_action)
+
+        return GetResponse(events=json.dumps(events) if events else None)
 
 
 EVENT_STORE_REDIS_HOST = os.getenv('EVENT_STORE_REDIS_HOST', 'localhost')
