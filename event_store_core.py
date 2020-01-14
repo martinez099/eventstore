@@ -70,15 +70,16 @@ class EventStore(object):
 
         return True
 
-    def read(self, _last_id, _topic):
+    def read(self, _last_id, _topic, _block=1000):
         """
         Read new event stream entries.
 
         :param _last_id: The ID of the last entry read.
         :param _topic: The event topic.
+        :param _block: The time to block in ms or None.
         :return: A list of event entries or None.
         """
-        return self.redis.xread({f'events:{_topic}': _last_id}, block=1000)
+        return self.redis.xread({f'events:{_topic}': _last_id}, block=_block)
 
     def get_all(self, _topic):
         """
