@@ -104,34 +104,31 @@ orders = [create_order(customers, products) for _ in range(0, 100)]
 billings = [create_billing(order['id']) for order in orders]
 
 for customer in customers:
-    es.publish('customer', 'created', customer)
+    es.publish('customer', 'entity_created', customer)
 
 for product in products:
-    es.publish('product', 'created', product)
+    es.publish('product', 'entity_created', product)
 
 for inventory in inventory:
-    es.publish('inventory', 'created', inventory)
+    es.publish('inventory', 'entity_created', inventory)
 
 for order in orders:
-    es.publish('order', 'created', order)
+    es.publish('order', 'entity_created', order)
 
 for billing in billings:
-    es.publish('billing', 'created', billing)
+    es.publish('billing', 'entity_created', billing)
 
 
 def order_service():
 
     # delete first order
-    es.publish('order', 'deleted', orders[0])
+    es.publish('order', 'entity_deleted', orders[0])
 
-    # get all order events
-    all_order_events = es.get('order')
+    # get 'created' events
+    created = es.get('order', _action='entity_created')
 
-    # filter 'created' events
-    created = es.get('order', _action='created')
-
-    # filter 'deleted' events
-    deleted = es.get('order', _action='deleted')
+    # get 'deleted' events
+    deleted = es.get('order', _action='entity_deleted')
 
     # filter current order entities
     result = filter(lambda r: json.loads(r[1]['event_data'])['id']

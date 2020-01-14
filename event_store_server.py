@@ -49,10 +49,10 @@ class EventStoreServer(EventStoreServicer):
                 for entry_id, entry in entries:
                     last_id = entry_id
                     yield Notification(
-                        event_id=entry['id'],
+                        event_id=entry['event_id'],
                         event_ts=float(last_id.replace('-', '.')),
-                        event_action=entry['action'],
-                        event_data=entry['data']
+                        event_action=entry['event_action'],
+                        event_data=entry['event_data']
                     )
 
     def unsubscribe(self, request, context):
