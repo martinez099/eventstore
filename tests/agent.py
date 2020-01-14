@@ -1,8 +1,9 @@
-import threading
-import uuid
+import json
 import random
 import string
+import threading
 import time
+import uuid
 
 from event_store_client import EventStoreClient
 
@@ -94,12 +95,22 @@ def create_product():
     }
 
 
+def create_event(_action, _data):
+    """
+    Create an event.
+
+    :param _action: The action happened.
+    :param _data: The data describing the action.
+    :return: A dict with the event properties.
+    """
+    return {
+        'event_id': str(uuid.uuid4()),
+        'event_action': _action,
+        'event_data': json.dumps(_data)
+    }
+
+
 es = EventStoreClient()
-es.activate_entity_cache('order')
-es.activate_entity_cache('product')
-es.activate_entity_cache('customer')
-es.activate_entity_cache('billing')
-es.activate_entity_cache('inventory')
 
 customers = [create_customer() for _ in range(0, 100)]
 products = [create_product() for _ in range(0, 100)]
@@ -108,32 +119,39 @@ orders = [create_order(customers, products) for _ in range(0, 100)]
 billings = [create_billing(order['id']) for order in orders]
 
 for customer in customers:
-    es.publish('customer', 'created', **customer)
+    es.publish('customer', create_event('created', customer))
 
 for product in products:
-    es.publish('product', 'created', **product)
+    es.publish('product', create_event('created', product))
 
 for inventory in inventory:
-    es.publish('inventory', 'created', **inventory)
+    es.publish('inventory', create_event('created', inventory))
 
 for order in orders:
-    es.publish('order', 'created', **order)
+    es.publish('order', create_event('created', order))
 
 for billing in billings:
-    es.publish('billing', 'created', **billing)
+    es.publish('billing', create_event('created', billing))
 
 
 def order_service():
 
-    result = es.find_one('order', orders[0]['id'])
-    assert result
+    # delete first order
+    es.publish('order', create_event('deleted', orders[0]))
 
-    result = es.find_all('order')
-    assert result
+    # get all order events
+    all_order_events = es.get_all('order')
 
-    es.publish('order', 'deleted', **orders[0])
-    result = es.find_one('order', orders[0]['id'])
-    assert not result
+    # filter 'created' events
+    created = filter(lambda x: x[1]['event_action'] == 'created', all_order_events)
+
+    # filter 'deleted' events
+    deleted = list(filter(lambda x: x[1]['event_action'] == 'deleted', all_order_events))
+
+    # filter current order entities
+    result = filter(lambda r: json.loads(r[1]['event_data'])['id'] not in map(lambda y: json.loads(y[1]['event_data'])['id'], deleted), created)
+
+    assert len(list(result)) == 99
 
 
 t1 = threading.Thread(target=order_service)

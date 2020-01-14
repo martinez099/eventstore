@@ -1,13 +1,13 @@
 import json
 import os
 import threading
-import uuid
-
 import grpc
 
-from event_store_pb2 import PublishRequest, FindOneRequest, FindAllRequest, ActivateEntityCacheRequest, \
-    DeactivateEntityCacheRequest, SubscribeRequest
+from event_store_pb2 import PublishRequest, GetAllRequest, SubscribeRequest
 from event_store_pb2_grpc import EventStoreStub
+
+EVENT_STORE_HOSTNAME = os.getenv('EVENT_STORE_HOSTNAME', 'localhost')
+EVENT_STORE_PORTNR = os.getenv('EVENT_STORE_PORTNR', '50051')
 
 
 class EventStoreClient(object):
@@ -16,7 +16,7 @@ class EventStoreClient(object):
     """
 
     def __init__(self):
-        host, port = os.getenv('EVENT_STORE_HOSTNAME', 'localhost'), os.getenv('EVENT_STORE_PORTNR', '50051')
+        host, port = EVENT_STORE_HOSTNAME, EVENT_STORE_PORTNR
         self.channel = grpc.insecure_channel('{}:{}'.format(host, port))
         self.stub = EventStoreStub(self.channel)
         self.subscribers = {}
@@ -24,108 +24,68 @@ class EventStoreClient(object):
     def __del__(self):
         self.channel.close()
 
-    def publish(self, _topic, _action, **_entity):
+    def publish(self, _topic, _data):
         """
         Publish an event.
 
         :param _topic: The event topic.
-        :param _action: The event action.
-        :param _entity: The event entity.
+        :param _data: The event data.
         :return: The entry ID.
         """
-        request = PublishRequest(
-            event_id=str(uuid.uuid4()),
+        response = self.stub.publish(PublishRequest(
             event_topic=_topic,
-            event_action=_action,
-            event_entity=json.dumps(_entity)
-        )
-        response = self.stub.publish(request)
+            event_data=json.dumps(_data)
+        ))
+
         return response.entry_id
 
-    def subscribe(self, _topic, _action, _handler):
+    def subscribe(self, _topic, _handler):
         """
         Subscribe to an event channel.
 
         :param _topic: The event topic.
-        :param _action: The event action.
         :param _handler: The event handler.
         :return: Success.
         """
-        if (_topic, _action) in self.subscribers:
-            self.subscribers[(_topic, _action)].add_handler(_handler)
+        if _topic in self.subscribers:
+            self.subscribers[_topic].add_handler(_handler)
         else:
-            subscriber = Subscriber(_topic, _action, _handler, self.stub)
+            subscriber = Subscriber(_topic, _handler, self.stub)
             subscriber.start()
-            self.subscribers[(_topic, _action)] = subscriber
+            self.subscribers[_topic] = subscriber
 
         return True
 
-    def unsubscribe(self, _topic, _action, _handler):
+    def unsubscribe(self, _topic, _handler):
         """
         Unsubscribe from an event channel.
 
         :param _topic: The event topic.
-        :param _action: The event action.
         :param _handler: The event handler.
         :return: Success.
         """
-        subscriber = self.subscribers.get((_topic, _action))
+        subscriber = self.subscribers.get(_topic)
         if not subscriber:
             return False
 
         subscriber.rem_handler(_handler)
         if not subscriber:
             subscriber.stop()
-            del self.subscribers[(_topic, _action)]
+            del self.subscribers[_topic]
 
         return True
 
-    def find_one(self, _topic, _id):
+    def get_all(self, _topic):
         """
-        Find an entity for a topic with an specific id.
-
-        :param _topic: The event topic, i.e. name of entity.
-        :param _id: The entity id.
-        :return: A dict with the entity.
-        """
-        request = FindOneRequest(event_topic=_topic, event_id=_id)
-        response = self.stub.find_one(request)
-
-        return json.loads(response.entity) if response.entity else None
-
-    def find_all(self, _topic):
-        """
-        Find all entites for a topic.
+        Get all entites for a topic.
 
         :param _topic: The event topic, i.e name of entity.
-        :return: A list with all entitys.
+        :return: A list with all entities.
         """
-        request = FindAllRequest(event_topic=_topic)
-        response = self.stub.find_all(request)
+        request = GetAllRequest(event_topic=_topic)
+        response = self.stub.get_all(request)
 
-        return json.loads(response.entities) if response.entities else None
-
-    def activate_entity_cache(self, _topic):
-        """
-        Keep entity cache up to date.
-
-        :param _topic: The entity type.
-        """
-        request = ActivateEntityCacheRequest(event_topic=_topic)
-        response = self.stub.activate_entity_cache(request)
-
-        return bool(response)
-
-    def deactivate_entity_cache(self, _topic):
-        """
-        Stop keeping entity cache up to date.
-
-        :param _topic: The entity type.
-        """
-        request = DeactivateEntityCacheRequest(event_topic=_topic)
-        response = self.stub.deactivate_entity_cache(request)
-
-        return bool(response)
+        return json.loads(response.events) if response.events else None
 
 
 class Subscriber(threading.Thread):
@@ -133,10 +93,9 @@ class Subscriber(threading.Thread):
     Subscriber Thread class.
     """
 
-    def __init__(self, _topic, _action, _handler, _stub):
+    def __init__(self, _topic, _handler, _stub):
         """
         :param _topic: The topic to subscirbe to.
-        :param _action: The action to scubscribe to.
         :param _handler: A handler function.
         """
         super(Subscriber, self).__init__()
@@ -144,7 +103,6 @@ class Subscriber(threading.Thread):
         self.subscribed = True
         self.handlers = [_handler]
         self.topic = _topic
-        self.action = _action
         self.stub = _stub
 
     def __len__(self):
@@ -159,7 +117,7 @@ class Subscriber(threading.Thread):
 
         self._running = True
         while self.subscribed:
-            request = SubscribeRequest(event_topic=self.topic, event_action=self.action)
+            request = SubscribeRequest(event_topic=self.topic)
             for item in self.stub.subscribe(request):
                 for handler in self.handlers:
                     handler(item)

@@ -8,8 +8,7 @@ import grpc
 
 from event_store_core import EventStore
 
-from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, FindAllResponse, \
-    FindOneResponse, ActivateEntityCacheResponse, DeactivateEntityCacheResponse
+from event_store_pb2 import PublishResponse, Notification, UnsubscribeResponse, GetAllResponse
 from event_store_pb2_grpc import EventStoreServicer, add_EventStoreServicer_to_server
 
 
@@ -28,9 +27,9 @@ class EventStoreServer(EventStoreServicer):
 
         :param request: The client request.
         :param context: The client context.
-        :return: PublishResponse
+        :return: An entry ID.
         """
-        entry_id = self.core.publish(request.event_id, request.event_topic, request.event_action, request.event_entity)
+        entry_id = self.core.publish(request.event_topic, json.loads(request.event_data))
 
         return PublishResponse(entry_id=entry_id)
 
@@ -40,18 +39,20 @@ class EventStoreServer(EventStoreServicer):
 
         :param request: The client request.
         :param context: The client context.
+        :return: Notifications.
         """
-        self.subscribers[(request.event_topic, request.event_action, context.peer())] = True
+        self.subscribers[(request.event_topic, context.peer())] = True
 
         last_id = '$'
-        while self.subscribers[(request.event_topic, request.event_action, context.peer())]:
-            for stream_name, entries in self.core.read(last_id, request.event_topic, request.event_action):
+        while self.subscribers[(request.event_topic, context.peer())]:
+            for stream_name, entries in self.core.read(last_id, request.event_topic):
                 for entry_id, entry in entries:
                     last_id = entry_id
                     yield Notification(
-                        event_id=entry['event_id'],
+                        event_id=entry['id'],
                         event_ts=float(last_id.replace('-', '.')),
-                        event_entity=entry['event_entity']
+                        event_action=entry['action'],
+                        event_data=entry['data']
                     )
 
     def unsubscribe(self, request, context):
@@ -62,55 +63,21 @@ class EventStoreServer(EventStoreServicer):
         :param context: The client context.
         :return: Success.
         """
-        self.subscribers[(request.event_topic, request.event_action, context.peer())] = False
+        self.subscribers[(request.event_topic, context.peer())] = False
 
         return UnsubscribeResponse(success=True)
 
-    def find_one(self, request, context):
+    def get_all(self, request, context):
         """
-        Find an entity for a topic with an specific id.
+        Get all entites for a topic.
 
         :param request: The client request.
         :param context: The client context.
-        :return: A dict with the entity.
+        :return: A list with all entitiess or None.
         """
-        entity = self.core.find_one(request.event_topic, request.event_id)
+        events = self.core.get_all(request.event_topic)
 
-        return FindOneResponse(entity=json.dumps(entity) if entity else None)
-
-    def find_all(self, request, context):
-        """
-        Find all entites for a topic.
-
-        :param request: The client request.
-        :param context: The client context.
-        :return: A list with all entitys.
-        """
-        entities = self.core.find_all(request.event_topic)
-
-        return FindAllResponse(entities=json.dumps(entities) if entities else None)
-
-    def activate_entity_cache(self, request, context):
-        """
-        Keep entity cache up to date.
-
-        :param request: The client request.
-        :param context: The client context.
-        """
-        self.core.activate_entity_cache(request.event_topic)
-
-        return ActivateEntityCacheResponse()
-
-    def deactivate_entity_cache(self, request, context):
-        """
-        Stop keeping entity cache up to date.
-
-        :param request: The client request.
-        :param context: The client context.
-        """
-        self.core.deactivate_entity_cache(request.event_topic)
-
-        return DeactivateEntityCacheResponse()
+        return GetAllResponse(events=json.dumps(events) if events else None)
 
 
 EVENT_STORE_REDIS_HOST = os.getenv('EVENT_STORE_REDIS_HOST', 'localhost')

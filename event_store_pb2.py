@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='eventstore',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x11\x65vent_store.proto\x12\neventstore\"c\n\x0ePublishRequest\x12\x10\n\x08\x65vent_id\x18\x01 \x01(\t\x12\x13\n\x0b\x65vent_topic\x18\x02 \x01(\t\x12\x14\n\x0c\x65vent_action\x18\x03 \x01(\t\x12\x14\n\x0c\x65vent_entity\x18\x04 \x01(\t\"#\n\x0fPublishResponse\x12\x10\n\x08\x65ntry_id\x18\x01 \x01(\t\"=\n\x10SubscribeRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x14\n\x0c\x65vent_action\x18\x02 \x01(\t\"H\n\x0cNotification\x12\x10\n\x08\x65vent_id\x18\x01 \x01(\t\x12\x10\n\x08\x65vent_ts\x18\x02 \x01(\x01\x12\x14\n\x0c\x65vent_entity\x18\x03 \x01(\t\"?\n\x12UnsubscribeRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x14\n\x0c\x65vent_action\x18\x02 \x01(\t\"&\n\x13UnsubscribeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"7\n\x0e\x46indOneRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x10\n\x08\x65vent_id\x18\x02 \x01(\t\"!\n\x0f\x46indOneResponse\x12\x0e\n\x06\x65ntity\x18\x01 \x01(\t\"%\n\x0e\x46indAllRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\"#\n\x0f\x46indAllResponse\x12\x10\n\x08\x65ntities\x18\x01 \x01(\t\"1\n\x1a\x41\x63tivateEntityCacheRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\"\x1d\n\x1b\x41\x63tivateEntityCacheResponse\"3\n\x1c\x44\x65\x61\x63tivateEntityCacheRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\"\x1f\n\x1d\x44\x65\x61\x63tivateEntityCacheResponse2\xd9\x04\n\nEventStore\x12\x44\n\x07publish\x12\x1a.eventstore.PublishRequest\x1a\x1b.eventstore.PublishResponse\"\x00\x12G\n\tsubscribe\x12\x1c.eventstore.SubscribeRequest\x1a\x18.eventstore.Notification\"\x00\x30\x01\x12P\n\x0bunsubscribe\x12\x1e.eventstore.UnsubscribeRequest\x1a\x1f.eventstore.UnsubscribeResponse\"\x00\x12\x45\n\x08\x66ind_one\x12\x1a.eventstore.FindOneRequest\x1a\x1b.eventstore.FindOneResponse\"\x00\x12\x45\n\x08\x66ind_all\x12\x1a.eventstore.FindAllRequest\x1a\x1b.eventstore.FindAllResponse\"\x00\x12j\n\x15\x61\x63tivate_entity_cache\x12&.eventstore.ActivateEntityCacheRequest\x1a\'.eventstore.ActivateEntityCacheResponse\"\x00\x12p\n\x17\x64\x65\x61\x63tivate_entity_cache\x12(.eventstore.DeactivateEntityCacheRequest\x1a).eventstore.DeactivateEntityCacheResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x11\x65vent_store.proto\x12\neventstore\"9\n\x0ePublishRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x12\n\nevent_data\x18\x02 \x01(\t\"#\n\x0fPublishResponse\x12\x10\n\x08\x65ntry_id\x18\x01 \x01(\t\"\'\n\x10SubscribeRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\"\\\n\x0cNotification\x12\x10\n\x08\x65vent_id\x18\x01 \x01(\t\x12\x10\n\x08\x65vent_ts\x18\x02 \x01(\x01\x12\x14\n\x0c\x65vent_action\x18\x03 \x01(\t\x12\x12\n\nevent_data\x18\x04 \x01(\t\"?\n\x12UnsubscribeRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x14\n\x0c\x65vent_action\x18\x02 \x01(\t\"&\n\x13UnsubscribeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"$\n\rGetAllRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\" \n\x0eGetAllResponse\x12\x0e\n\x06\x65vents\x18\x01 \x01(\t2\xb1\x02\n\nEventStore\x12\x44\n\x07publish\x12\x1a.eventstore.PublishRequest\x1a\x1b.eventstore.PublishResponse\"\x00\x12G\n\tsubscribe\x12\x1c.eventstore.SubscribeRequest\x1a\x18.eventstore.Notification\"\x00\x30\x01\x12P\n\x0bunsubscribe\x12\x1e.eventstore.UnsubscribeRequest\x1a\x1f.eventstore.UnsubscribeResponse\"\x00\x12\x42\n\x07get_all\x12\x19.eventstore.GetAllRequest\x1a\x1a.eventstore.GetAllResponse\"\x00\x62\x06proto3')
 )
 
 
@@ -33,29 +33,15 @@ _PUBLISHREQUEST = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='event_id', full_name='eventstore.PublishRequest.event_id', index=0,
+      name='event_topic', full_name='eventstore.PublishRequest.event_topic', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='event_topic', full_name='eventstore.PublishRequest.event_topic', index=1,
+      name='event_data', full_name='eventstore.PublishRequest.event_data', index=1,
       number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='event_action', full_name='eventstore.PublishRequest.event_action', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='event_entity', full_name='eventstore.PublishRequest.event_entity', index=3,
-      number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -73,7 +59,7 @@ _PUBLISHREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=33,
-  serialized_end=132,
+  serialized_end=90,
 )
 
 
@@ -103,8 +89,8 @@ _PUBLISHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=134,
-  serialized_end=169,
+  serialized_start=92,
+  serialized_end=127,
 )
 
 
@@ -122,13 +108,6 @@ _SUBSCRIBEREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='event_action', full_name='eventstore.SubscribeRequest.event_action', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -141,8 +120,8 @@ _SUBSCRIBEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=171,
-  serialized_end=232,
+  serialized_start=129,
+  serialized_end=168,
 )
 
 
@@ -168,8 +147,15 @@ _NOTIFICATION = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='event_entity', full_name='eventstore.Notification.event_entity', index=2,
+      name='event_action', full_name='eventstore.Notification.event_action', index=2,
       number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='event_data', full_name='eventstore.Notification.event_data', index=3,
+      number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -186,8 +172,8 @@ _NOTIFICATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=234,
-  serialized_end=306,
+  serialized_start=170,
+  serialized_end=262,
 )
 
 
@@ -224,8 +210,8 @@ _UNSUBSCRIBEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=308,
-  serialized_end=371,
+  serialized_start=264,
+  serialized_end=327,
 )
 
 
@@ -255,58 +241,20 @@ _UNSUBSCRIBERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=373,
-  serialized_end=411,
+  serialized_start=329,
+  serialized_end=367,
 )
 
 
-_FINDONEREQUEST = _descriptor.Descriptor(
-  name='FindOneRequest',
-  full_name='eventstore.FindOneRequest',
+_GETALLREQUEST = _descriptor.Descriptor(
+  name='GetAllRequest',
+  full_name='eventstore.GetAllRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='event_topic', full_name='eventstore.FindOneRequest.event_topic', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='event_id', full_name='eventstore.FindOneRequest.event_id', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=413,
-  serialized_end=468,
-)
-
-
-_FINDONERESPONSE = _descriptor.Descriptor(
-  name='FindOneResponse',
-  full_name='eventstore.FindOneResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='entity', full_name='eventstore.FindOneResponse.entity', index=0,
+      name='event_topic', full_name='eventstore.GetAllRequest.event_topic', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -324,20 +272,20 @@ _FINDONERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=470,
-  serialized_end=503,
+  serialized_start=369,
+  serialized_end=405,
 )
 
 
-_FINDALLREQUEST = _descriptor.Descriptor(
-  name='FindAllRequest',
-  full_name='eventstore.FindAllRequest',
+_GETALLRESPONSE = _descriptor.Descriptor(
+  name='GetAllResponse',
+  full_name='eventstore.GetAllResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='event_topic', full_name='eventstore.FindAllRequest.event_topic', index=0,
+      name='events', full_name='eventstore.GetAllResponse.events', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -355,149 +303,8 @@ _FINDALLREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=505,
-  serialized_end=542,
-)
-
-
-_FINDALLRESPONSE = _descriptor.Descriptor(
-  name='FindAllResponse',
-  full_name='eventstore.FindAllResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='entities', full_name='eventstore.FindAllResponse.entities', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=544,
-  serialized_end=579,
-)
-
-
-_ACTIVATEENTITYCACHEREQUEST = _descriptor.Descriptor(
-  name='ActivateEntityCacheRequest',
-  full_name='eventstore.ActivateEntityCacheRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='event_topic', full_name='eventstore.ActivateEntityCacheRequest.event_topic', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=581,
-  serialized_end=630,
-)
-
-
-_ACTIVATEENTITYCACHERESPONSE = _descriptor.Descriptor(
-  name='ActivateEntityCacheResponse',
-  full_name='eventstore.ActivateEntityCacheResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=632,
-  serialized_end=661,
-)
-
-
-_DEACTIVATEENTITYCACHEREQUEST = _descriptor.Descriptor(
-  name='DeactivateEntityCacheRequest',
-  full_name='eventstore.DeactivateEntityCacheRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='event_topic', full_name='eventstore.DeactivateEntityCacheRequest.event_topic', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=663,
-  serialized_end=714,
-)
-
-
-_DEACTIVATEENTITYCACHERESPONSE = _descriptor.Descriptor(
-  name='DeactivateEntityCacheResponse',
-  full_name='eventstore.DeactivateEntityCacheResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=716,
-  serialized_end=747,
+  serialized_start=407,
+  serialized_end=439,
 )
 
 DESCRIPTOR.message_types_by_name['PublishRequest'] = _PUBLISHREQUEST
@@ -506,14 +313,8 @@ DESCRIPTOR.message_types_by_name['SubscribeRequest'] = _SUBSCRIBEREQUEST
 DESCRIPTOR.message_types_by_name['Notification'] = _NOTIFICATION
 DESCRIPTOR.message_types_by_name['UnsubscribeRequest'] = _UNSUBSCRIBEREQUEST
 DESCRIPTOR.message_types_by_name['UnsubscribeResponse'] = _UNSUBSCRIBERESPONSE
-DESCRIPTOR.message_types_by_name['FindOneRequest'] = _FINDONEREQUEST
-DESCRIPTOR.message_types_by_name['FindOneResponse'] = _FINDONERESPONSE
-DESCRIPTOR.message_types_by_name['FindAllRequest'] = _FINDALLREQUEST
-DESCRIPTOR.message_types_by_name['FindAllResponse'] = _FINDALLRESPONSE
-DESCRIPTOR.message_types_by_name['ActivateEntityCacheRequest'] = _ACTIVATEENTITYCACHEREQUEST
-DESCRIPTOR.message_types_by_name['ActivateEntityCacheResponse'] = _ACTIVATEENTITYCACHERESPONSE
-DESCRIPTOR.message_types_by_name['DeactivateEntityCacheRequest'] = _DEACTIVATEENTITYCACHEREQUEST
-DESCRIPTOR.message_types_by_name['DeactivateEntityCacheResponse'] = _DEACTIVATEENTITYCACHERESPONSE
+DESCRIPTOR.message_types_by_name['GetAllRequest'] = _GETALLREQUEST
+DESCRIPTOR.message_types_by_name['GetAllResponse'] = _GETALLRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 PublishRequest = _reflection.GeneratedProtocolMessageType('PublishRequest', (_message.Message,), dict(
@@ -558,61 +359,19 @@ UnsubscribeResponse = _reflection.GeneratedProtocolMessageType('UnsubscribeRespo
   ))
 _sym_db.RegisterMessage(UnsubscribeResponse)
 
-FindOneRequest = _reflection.GeneratedProtocolMessageType('FindOneRequest', (_message.Message,), dict(
-  DESCRIPTOR = _FINDONEREQUEST,
+GetAllRequest = _reflection.GeneratedProtocolMessageType('GetAllRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETALLREQUEST,
   __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.FindOneRequest)
+  # @@protoc_insertion_point(class_scope:eventstore.GetAllRequest)
   ))
-_sym_db.RegisterMessage(FindOneRequest)
+_sym_db.RegisterMessage(GetAllRequest)
 
-FindOneResponse = _reflection.GeneratedProtocolMessageType('FindOneResponse', (_message.Message,), dict(
-  DESCRIPTOR = _FINDONERESPONSE,
+GetAllResponse = _reflection.GeneratedProtocolMessageType('GetAllResponse', (_message.Message,), dict(
+  DESCRIPTOR = _GETALLRESPONSE,
   __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.FindOneResponse)
+  # @@protoc_insertion_point(class_scope:eventstore.GetAllResponse)
   ))
-_sym_db.RegisterMessage(FindOneResponse)
-
-FindAllRequest = _reflection.GeneratedProtocolMessageType('FindAllRequest', (_message.Message,), dict(
-  DESCRIPTOR = _FINDALLREQUEST,
-  __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.FindAllRequest)
-  ))
-_sym_db.RegisterMessage(FindAllRequest)
-
-FindAllResponse = _reflection.GeneratedProtocolMessageType('FindAllResponse', (_message.Message,), dict(
-  DESCRIPTOR = _FINDALLRESPONSE,
-  __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.FindAllResponse)
-  ))
-_sym_db.RegisterMessage(FindAllResponse)
-
-ActivateEntityCacheRequest = _reflection.GeneratedProtocolMessageType('ActivateEntityCacheRequest', (_message.Message,), dict(
-  DESCRIPTOR = _ACTIVATEENTITYCACHEREQUEST,
-  __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.ActivateEntityCacheRequest)
-  ))
-_sym_db.RegisterMessage(ActivateEntityCacheRequest)
-
-ActivateEntityCacheResponse = _reflection.GeneratedProtocolMessageType('ActivateEntityCacheResponse', (_message.Message,), dict(
-  DESCRIPTOR = _ACTIVATEENTITYCACHERESPONSE,
-  __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.ActivateEntityCacheResponse)
-  ))
-_sym_db.RegisterMessage(ActivateEntityCacheResponse)
-
-DeactivateEntityCacheRequest = _reflection.GeneratedProtocolMessageType('DeactivateEntityCacheRequest', (_message.Message,), dict(
-  DESCRIPTOR = _DEACTIVATEENTITYCACHEREQUEST,
-  __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.DeactivateEntityCacheRequest)
-  ))
-_sym_db.RegisterMessage(DeactivateEntityCacheRequest)
-
-DeactivateEntityCacheResponse = _reflection.GeneratedProtocolMessageType('DeactivateEntityCacheResponse', (_message.Message,), dict(
-  DESCRIPTOR = _DEACTIVATEENTITYCACHERESPONSE,
-  __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.DeactivateEntityCacheResponse)
-  ))
-_sym_db.RegisterMessage(DeactivateEntityCacheResponse)
+_sym_db.RegisterMessage(GetAllResponse)
 
 
 
@@ -622,8 +381,8 @@ _EVENTSTORE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=750,
-  serialized_end=1351,
+  serialized_start=442,
+  serialized_end=747,
   methods=[
   _descriptor.MethodDescriptor(
     name='publish',
@@ -653,39 +412,12 @@ _EVENTSTORE = _descriptor.ServiceDescriptor(
     serialized_options=None,
   ),
   _descriptor.MethodDescriptor(
-    name='find_one',
-    full_name='eventstore.EventStore.find_one',
+    name='get_all',
+    full_name='eventstore.EventStore.get_all',
     index=3,
     containing_service=None,
-    input_type=_FINDONEREQUEST,
-    output_type=_FINDONERESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='find_all',
-    full_name='eventstore.EventStore.find_all',
-    index=4,
-    containing_service=None,
-    input_type=_FINDALLREQUEST,
-    output_type=_FINDALLRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='activate_entity_cache',
-    full_name='eventstore.EventStore.activate_entity_cache',
-    index=5,
-    containing_service=None,
-    input_type=_ACTIVATEENTITYCACHEREQUEST,
-    output_type=_ACTIVATEENTITYCACHERESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='deactivate_entity_cache',
-    full_name='eventstore.EventStore.deactivate_entity_cache',
-    index=6,
-    containing_service=None,
-    input_type=_DEACTIVATEENTITYCACHEREQUEST,
-    output_type=_DEACTIVATEENTITYCACHERESPONSE,
+    input_type=_GETALLREQUEST,
+    output_type=_GETALLRESPONSE,
     serialized_options=None,
   ),
 ])

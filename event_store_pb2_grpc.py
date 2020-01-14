@@ -29,25 +29,10 @@ class EventStoreStub(object):
         request_serializer=event__store__pb2.UnsubscribeRequest.SerializeToString,
         response_deserializer=event__store__pb2.UnsubscribeResponse.FromString,
         )
-    self.find_one = channel.unary_unary(
-        '/eventstore.EventStore/find_one',
-        request_serializer=event__store__pb2.FindOneRequest.SerializeToString,
-        response_deserializer=event__store__pb2.FindOneResponse.FromString,
-        )
-    self.find_all = channel.unary_unary(
-        '/eventstore.EventStore/find_all',
-        request_serializer=event__store__pb2.FindAllRequest.SerializeToString,
-        response_deserializer=event__store__pb2.FindAllResponse.FromString,
-        )
-    self.activate_entity_cache = channel.unary_unary(
-        '/eventstore.EventStore/activate_entity_cache',
-        request_serializer=event__store__pb2.ActivateEntityCacheRequest.SerializeToString,
-        response_deserializer=event__store__pb2.ActivateEntityCacheResponse.FromString,
-        )
-    self.deactivate_entity_cache = channel.unary_unary(
-        '/eventstore.EventStore/deactivate_entity_cache',
-        request_serializer=event__store__pb2.DeactivateEntityCacheRequest.SerializeToString,
-        response_deserializer=event__store__pb2.DeactivateEntityCacheResponse.FromString,
+    self.get_all = channel.unary_unary(
+        '/eventstore.EventStore/get_all',
+        request_serializer=event__store__pb2.GetAllRequest.SerializeToString,
+        response_deserializer=event__store__pb2.GetAllResponse.FromString,
         )
 
 
@@ -76,28 +61,7 @@ class EventStoreServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def find_one(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def find_all(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def activate_entity_cache(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def deactivate_entity_cache(self, request, context):
+  def get_all(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -122,25 +86,10 @@ def add_EventStoreServicer_to_server(servicer, server):
           request_deserializer=event__store__pb2.UnsubscribeRequest.FromString,
           response_serializer=event__store__pb2.UnsubscribeResponse.SerializeToString,
       ),
-      'find_one': grpc.unary_unary_rpc_method_handler(
-          servicer.find_one,
-          request_deserializer=event__store__pb2.FindOneRequest.FromString,
-          response_serializer=event__store__pb2.FindOneResponse.SerializeToString,
-      ),
-      'find_all': grpc.unary_unary_rpc_method_handler(
-          servicer.find_all,
-          request_deserializer=event__store__pb2.FindAllRequest.FromString,
-          response_serializer=event__store__pb2.FindAllResponse.SerializeToString,
-      ),
-      'activate_entity_cache': grpc.unary_unary_rpc_method_handler(
-          servicer.activate_entity_cache,
-          request_deserializer=event__store__pb2.ActivateEntityCacheRequest.FromString,
-          response_serializer=event__store__pb2.ActivateEntityCacheResponse.SerializeToString,
-      ),
-      'deactivate_entity_cache': grpc.unary_unary_rpc_method_handler(
-          servicer.deactivate_entity_cache,
-          request_deserializer=event__store__pb2.DeactivateEntityCacheRequest.FromString,
-          response_serializer=event__store__pb2.DeactivateEntityCacheResponse.SerializeToString,
+      'get_all': grpc.unary_unary_rpc_method_handler(
+          servicer.get_all,
+          request_deserializer=event__store__pb2.GetAllRequest.FromString,
+          response_serializer=event__store__pb2.GetAllResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
