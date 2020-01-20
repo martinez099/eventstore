@@ -5,7 +5,7 @@ import uuid
 
 import grpc
 
-from event_store_pb2 import PublishRequest, SubscribeRequest, GetRequest
+from event_store_pb2 import PublishRequest, SubscribeRequest, UnsubscribeRequest, GetRequest
 from event_store_pb2_grpc import EventStoreStub
 
 EVENT_STORE_HOSTNAME = os.getenv('EVENT_STORE_HOSTNAME', 'localhost')
@@ -55,6 +55,32 @@ def deduce_entities(_events):
     return created
 
 
+def keep_track(_entities, _event):
+    """
+    Keep track of entity events.
+
+    :param _entities: A dict with entities, mapping entity ID -> entity data.
+    :param _event: The event entry.
+    """
+    if _event.event_action == 'entity_created':
+        event_data = json.loads(_event.event_data)
+        if _entities[event_data['entity_id']]:
+            raise Exception('could not deduce created event')
+        _entities[event_data['entity_id']] = event_data
+
+    if _event.event_action == 'entity_deleted':
+        event_data = json.loads(_event.event_data)
+        if not _entities[event_data['entity_id']]:
+            raise Exception('could not deduce deleted event')
+        del _entities[event_data['entity_id']]
+
+    if _event.event_action == 'entity_updated':
+        event_data = json.loads(_event.event_data)
+        if not _entities[event_data['entity_id']]:
+            raise Exception('could not deduce updated event')
+        _entities[event_data['entity_id']] = event_data
+
+
 class EventStoreClient(object):
     """
     Event Store Client class.
@@ -86,7 +112,7 @@ class EventStoreClient(object):
 
     def subscribe(self, _topic, _handler):
         """
-        Subscribe to an event channel.
+        Subscribe to an event topic.
 
         :param _topic: The event topic.
         :param _handler: The event handler.
@@ -103,7 +129,7 @@ class EventStoreClient(object):
 
     def unsubscribe(self, _topic, _handler):
         """
-        Unsubscribe from an event channel.
+        Unsubscribe from an event topic.
 
         :param _topic: The event topic.
         :param _handler: The event handler.
@@ -113,12 +139,13 @@ class EventStoreClient(object):
         if not subscriber:
             return False
 
+        response = self.stub.unsubscribe(UnsubscribeRequest(event_topic=_topic))
+
         subscriber.rem_handler(_handler)
         if not subscriber:
-            subscriber.stop()
             del self.subscribers[_topic]
 
-        return True
+        return response.success
 
     def get(self, _topic):
         """
@@ -127,8 +154,7 @@ class EventStoreClient(object):
         :param _topic: The event topic, i.e name of entity.
         :return: A list with entities, optional for a given action.
         """
-        request = GetRequest(event_topic=_topic)
-        response = self.stub.get(request)
+        response = self.stub.get(GetRequest(event_topic=_topic))
 
         return json.loads(response.events) if response.events else None
 
@@ -145,7 +171,6 @@ class Subscriber(threading.Thread):
         """
         super(Subscriber, self).__init__()
         self._running = False
-        self.subscribed = True
         self.handlers = [_handler]
         self.topic = _topic
         self.stub = _stub
@@ -161,18 +186,10 @@ class Subscriber(threading.Thread):
             return
 
         self._running = True
-        while self.subscribed:
-            request = SubscribeRequest(event_topic=self.topic)
-            for item in self.stub.subscribe(request):
-                for handler in self.handlers:
-                    handler(item)
+        for item in self.stub.subscribe(SubscribeRequest(event_topic=self.topic)):
+            for handler in self.handlers:
+                handler(item)
         self._running = False
-
-    def stop(self):
-        """
-        Stop polling the event stream.
-        """
-        self.subscribed = False
 
     def add_handler(self, _handler):
         """

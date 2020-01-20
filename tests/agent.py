@@ -1,4 +1,3 @@
-import json
 import random
 import functools
 import string
@@ -6,7 +5,7 @@ import threading
 import time
 import uuid
 
-from event_store_client import EventStoreClient, create_event, deduce_entities
+from event_store_client import EventStoreClient, create_event, deduce_entities, keep_track
 
 
 def get_any_id(_entities, _but=None):
@@ -120,13 +119,13 @@ for billing in billings:
     es.publish('billing', create_event('entity_created', billing))
 
 
-def order_service():
+def order_service(_es):
 
     # delete first order
-    es.publish('order', create_event('entity_deleted', orders[0]))
+    _es.publish('order', create_event('entity_deleted', orders[0]))
 
     # get all order events
-    order_events = es.get('order')
+    order_events = _es.get('order')
 
     # deduce entities
     order_entities = deduce_entities(order_events)
@@ -136,10 +135,10 @@ def order_service():
 
     # remnove last product from second order
     orders[1]['product_ids'] = orders[1]['product_ids'][:-1]
-    es.publish('order', create_event('entity_updated', orders[1]))
+    _es.publish('order', create_event('entity_updated', orders[1]))
 
     # get all order events
-    order_events = es.get('order')
+    order_events = _es.get('order')
 
     # deduce entities
     order_entities = deduce_entities(order_events)
@@ -147,30 +146,27 @@ def order_service():
     # check result
     assert len(order_entities[orders[1]['entity_id']]['product_ids']) == len(orders[1]['product_ids'])
 
-    def keep_track(_rm, _event):
-        event_action = _event.event_action
-        if event_action == 'entity_created' or event_action == 'entity_updated':
-            event_data = json.loads(_event.event_data)
-            _rm[event_data['entity_id']] = event_data
-        if event_action == 'entity_deleted':
-            event_data = json.loads(_event.event_data)
-            del _rm[event_data['entity_id']]
-
     # create handler function
-    handler = functools.partial(keep_track, order_entities)
+    tracking_handler = functools.partial(keep_track, order_entities)
 
     # subscribe to topic
-    es.subscribe('order', handler)
+    _es.subscribe('order', tracking_handler)
 
     # delete third order
-    es.publish('order', create_event('entity_deleted', orders[2]))
+    _es.publish('order', create_event('entity_deleted', orders[2]))
+
+    time.sleep(.1)
 
     # check result
     assert len(order_entities) == 98
 
     # unsubscribe from topic
-    es.unsubscribe('order', handler)
+    result = _es.unsubscribe('order', tracking_handler)
+
+    time.sleep(.1)
+
+    return result
 
 
-t1 = threading.Thread(target=order_service)
+t1 = threading.Thread(target=order_service, args=(es,))
 t1.start()

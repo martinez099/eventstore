@@ -67,7 +67,7 @@ class EventStore(object):
 
         return True
 
-    def read(self, _last_id, _topic, _block=1000):
+    def read(self, _last_id, _topic, _block=100):
         """
         Read new event stream entries.
 

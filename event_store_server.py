@@ -39,7 +39,7 @@ class EventStoreServer(EventStoreServicer):
 
         :param request: The client request.
         :param context: The client context.
-        :return: Notifications.
+        :return: Notification stream.
         """
         self.subscribers[(request.event_topic, context.peer())] = True
 

@@ -31,7 +31,6 @@ message Notification {
 
 message UnsubscribeRequest {
   string event_topic = 1;
-  string event_action = 2;
 }
 
 message UnsubscribeResponse {
