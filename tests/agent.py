@@ -155,17 +155,17 @@ def order_service(_es):
     # delete third order
     _es.publish('order', create_event('entity_deleted', orders[2]))
 
+    # sync
     time.sleep(.1)
 
     # check result
     assert len(order_entities) == 98
 
     # unsubscribe from topic
-    result = _es.unsubscribe('order', tracking_handler)
+    _es.unsubscribe('order', tracking_handler)
 
+    # sync
     time.sleep(.1)
-
-    return result
 
 
 t1 = threading.Thread(target=order_service, args=(es,))
