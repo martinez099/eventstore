@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='eventstore',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x11\x65vent_store.proto\x12\neventstore\"O\n\x0ePublishRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x14\n\x0c\x65vent_action\x18\x02 \x01(\t\x12\x12\n\nevent_data\x18\x03 \x01(\t\"#\n\x0fPublishResponse\x12\x10\n\x08\x65ntry_id\x18\x01 \x01(\t\"\'\n\x10SubscribeRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\"\\\n\x0cNotification\x12\x10\n\x08\x65vent_id\x18\x01 \x01(\t\x12\x10\n\x08\x65vent_ts\x18\x02 \x01(\x01\x12\x14\n\x0c\x65vent_action\x18\x03 \x01(\t\x12\x12\n\nevent_data\x18\x04 \x01(\t\"?\n\x12UnsubscribeRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x14\n\x0c\x65vent_action\x18\x02 \x01(\t\"&\n\x13UnsubscribeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"$\n\rGetAllRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\"=\n\x10GetActionRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x14\n\x0c\x65vent_action\x18\x02 \x01(\t\"\x1d\n\x0bGetResponse\x12\x0e\n\x06\x65vents\x18\x01 \x01(\t2\xf5\x02\n\nEventStore\x12\x44\n\x07publish\x12\x1a.eventstore.PublishRequest\x1a\x1b.eventstore.PublishResponse\"\x00\x12G\n\tsubscribe\x12\x1c.eventstore.SubscribeRequest\x1a\x18.eventstore.Notification\"\x00\x30\x01\x12P\n\x0bunsubscribe\x12\x1e.eventstore.UnsubscribeRequest\x1a\x1f.eventstore.UnsubscribeResponse\"\x00\x12?\n\x07get_all\x12\x19.eventstore.GetAllRequest\x1a\x17.eventstore.GetResponse\"\x00\x12\x45\n\nget_action\x12\x1c.eventstore.GetActionRequest\x1a\x17.eventstore.GetResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x11\x65vent_store.proto\x12\neventstore\"9\n\x0ePublishRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x12\n\nevent_info\x18\x02 \x01(\t\"#\n\x0fPublishResponse\x12\x10\n\x08\x65ntry_id\x18\x01 \x01(\t\"\'\n\x10SubscribeRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\"\\\n\x0cNotification\x12\x10\n\x08\x65vent_id\x18\x01 \x01(\t\x12\x10\n\x08\x65vent_ts\x18\x02 \x01(\x01\x12\x14\n\x0c\x65vent_action\x18\x03 \x01(\t\x12\x12\n\nevent_data\x18\x04 \x01(\t\"?\n\x12UnsubscribeRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\x12\x14\n\x0c\x65vent_action\x18\x02 \x01(\t\"&\n\x13UnsubscribeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"!\n\nGetRequest\x12\x13\n\x0b\x65vent_topic\x18\x01 \x01(\t\"\x1d\n\x0bGetResponse\x12\x0e\n\x06\x65vents\x18\x01 \x01(\t2\xa7\x02\n\nEventStore\x12\x44\n\x07publish\x12\x1a.eventstore.PublishRequest\x1a\x1b.eventstore.PublishResponse\"\x00\x12G\n\tsubscribe\x12\x1c.eventstore.SubscribeRequest\x1a\x18.eventstore.Notification\"\x00\x30\x01\x12P\n\x0bunsubscribe\x12\x1e.eventstore.UnsubscribeRequest\x1a\x1f.eventstore.UnsubscribeResponse\"\x00\x12\x38\n\x03get\x12\x16.eventstore.GetRequest\x1a\x17.eventstore.GetResponse\"\x00\x62\x06proto3')
 )
 
 
@@ -40,15 +40,8 @@ _PUBLISHREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='event_action', full_name='eventstore.PublishRequest.event_action', index=1,
+      name='event_info', full_name='eventstore.PublishRequest.event_info', index=1,
       number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='event_data', full_name='eventstore.PublishRequest.event_data', index=2,
-      number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -66,7 +59,7 @@ _PUBLISHREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=33,
-  serialized_end=112,
+  serialized_end=90,
 )
 
 
@@ -96,8 +89,8 @@ _PUBLISHRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=114,
-  serialized_end=149,
+  serialized_start=92,
+  serialized_end=127,
 )
 
 
@@ -127,8 +120,8 @@ _SUBSCRIBEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=151,
-  serialized_end=190,
+  serialized_start=129,
+  serialized_end=168,
 )
 
 
@@ -179,8 +172,8 @@ _NOTIFICATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=192,
-  serialized_end=284,
+  serialized_start=170,
+  serialized_end=262,
 )
 
 
@@ -217,8 +210,8 @@ _UNSUBSCRIBEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=286,
-  serialized_end=349,
+  serialized_start=264,
+  serialized_end=327,
 )
 
 
@@ -248,20 +241,20 @@ _UNSUBSCRIBERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=351,
-  serialized_end=389,
+  serialized_start=329,
+  serialized_end=367,
 )
 
 
-_GETALLREQUEST = _descriptor.Descriptor(
-  name='GetAllRequest',
-  full_name='eventstore.GetAllRequest',
+_GETREQUEST = _descriptor.Descriptor(
+  name='GetRequest',
+  full_name='eventstore.GetRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='event_topic', full_name='eventstore.GetAllRequest.event_topic', index=0,
+      name='event_topic', full_name='eventstore.GetRequest.event_topic', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -279,46 +272,8 @@ _GETALLREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=391,
-  serialized_end=427,
-)
-
-
-_GETACTIONREQUEST = _descriptor.Descriptor(
-  name='GetActionRequest',
-  full_name='eventstore.GetActionRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='event_topic', full_name='eventstore.GetActionRequest.event_topic', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='event_action', full_name='eventstore.GetActionRequest.event_action', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=429,
-  serialized_end=490,
+  serialized_start=369,
+  serialized_end=402,
 )
 
 
@@ -348,8 +303,8 @@ _GETRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=492,
-  serialized_end=521,
+  serialized_start=404,
+  serialized_end=433,
 )
 
 DESCRIPTOR.message_types_by_name['PublishRequest'] = _PUBLISHREQUEST
@@ -358,8 +313,7 @@ DESCRIPTOR.message_types_by_name['SubscribeRequest'] = _SUBSCRIBEREQUEST
 DESCRIPTOR.message_types_by_name['Notification'] = _NOTIFICATION
 DESCRIPTOR.message_types_by_name['UnsubscribeRequest'] = _UNSUBSCRIBEREQUEST
 DESCRIPTOR.message_types_by_name['UnsubscribeResponse'] = _UNSUBSCRIBERESPONSE
-DESCRIPTOR.message_types_by_name['GetAllRequest'] = _GETALLREQUEST
-DESCRIPTOR.message_types_by_name['GetActionRequest'] = _GETACTIONREQUEST
+DESCRIPTOR.message_types_by_name['GetRequest'] = _GETREQUEST
 DESCRIPTOR.message_types_by_name['GetResponse'] = _GETRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -405,19 +359,12 @@ UnsubscribeResponse = _reflection.GeneratedProtocolMessageType('UnsubscribeRespo
   ))
 _sym_db.RegisterMessage(UnsubscribeResponse)
 
-GetAllRequest = _reflection.GeneratedProtocolMessageType('GetAllRequest', (_message.Message,), dict(
-  DESCRIPTOR = _GETALLREQUEST,
+GetRequest = _reflection.GeneratedProtocolMessageType('GetRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETREQUEST,
   __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.GetAllRequest)
+  # @@protoc_insertion_point(class_scope:eventstore.GetRequest)
   ))
-_sym_db.RegisterMessage(GetAllRequest)
-
-GetActionRequest = _reflection.GeneratedProtocolMessageType('GetActionRequest', (_message.Message,), dict(
-  DESCRIPTOR = _GETACTIONREQUEST,
-  __module__ = 'event_store_pb2'
-  # @@protoc_insertion_point(class_scope:eventstore.GetActionRequest)
-  ))
-_sym_db.RegisterMessage(GetActionRequest)
+_sym_db.RegisterMessage(GetRequest)
 
 GetResponse = _reflection.GeneratedProtocolMessageType('GetResponse', (_message.Message,), dict(
   DESCRIPTOR = _GETRESPONSE,
@@ -434,8 +381,8 @@ _EVENTSTORE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=524,
-  serialized_end=897,
+  serialized_start=436,
+  serialized_end=731,
   methods=[
   _descriptor.MethodDescriptor(
     name='publish',
@@ -465,20 +412,11 @@ _EVENTSTORE = _descriptor.ServiceDescriptor(
     serialized_options=None,
   ),
   _descriptor.MethodDescriptor(
-    name='get_all',
-    full_name='eventstore.EventStore.get_all',
+    name='get',
+    full_name='eventstore.EventStore.get',
     index=3,
     containing_service=None,
-    input_type=_GETALLREQUEST,
-    output_type=_GETRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='get_action',
-    full_name='eventstore.EventStore.get_action',
-    index=4,
-    containing_service=None,
-    input_type=_GETACTIONREQUEST,
+    input_type=_GETREQUEST,
     output_type=_GETRESPONSE,
     serialized_options=None,
   ),

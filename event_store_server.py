@@ -29,7 +29,7 @@ class EventStoreServer(EventStoreServicer):
         :param context: The client context.
         :return: An entry ID.
         """
-        entry_id = self.core.publish(request.event_topic, request.event_action, json.loads(request.event_data))
+        entry_id = self.core.publish(request.event_topic, json.loads(request.event_info))
 
         return PublishResponse(entry_id=entry_id)
 
@@ -67,27 +67,15 @@ class EventStoreServer(EventStoreServicer):
 
         return UnsubscribeResponse(success=True)
 
-    def get_all(self, request, context):
+    def get(self, request, context):
         """
         Get all events for a topic.
 
         :param request: The client request.
         :param context: The client context.
-        :return: A list with all entitiess or None.
+        :return: A list with all entities or None.
         """
         events = self.core.get(request.event_topic)
-
-        return GetResponse(events=json.dumps(events) if events else None)
-
-    def get_action(self, request, context):
-        """
-        Get events for a topic with a given action.
-
-        :param request: The client request.
-        :param context: The client context.
-        :return: A list with all entitiess with a given action or None.
-        """
-        events = self.core.get(request.event_topic, _action=request.event_action)
 
         return GetResponse(events=json.dumps(events) if events else None)
 

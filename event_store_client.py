@@ -3,7 +3,7 @@ import os
 import threading
 import grpc
 
-from event_store_pb2 import PublishRequest, SubscribeRequest, GetAllRequest, GetActionRequest
+from event_store_pb2 import PublishRequest, SubscribeRequest, GetRequest
 from event_store_pb2_grpc import EventStoreStub
 
 EVENT_STORE_HOSTNAME = os.getenv('EVENT_STORE_HOSTNAME', 'localhost')
@@ -24,19 +24,17 @@ class EventStoreClient(object):
     def __del__(self):
         self.channel.close()
 
-    def publish(self, _topic, _action, _data):
+    def publish(self, _topic, _info):
         """
         Publish an event.
 
         :param _topic: The event topic.
-        :param _action: The event action.
-        :param _data: The event data.
+        :param _info: A dict with the event information.
         :return: The entry ID.
         """
         response = self.stub.publish(PublishRequest(
             event_topic=_topic,
-            event_action=_action,
-            event_data=json.dumps(_data)
+            event_info=json.dumps(_info)
         ))
 
         return response.entry_id
@@ -77,20 +75,15 @@ class EventStoreClient(object):
 
         return True
 
-    def get(self, _topic, _action=None):
+    def get(self, _topic):
         """
         Get events for a topic, optional for a given action.
 
         :param _topic: The event topic, i.e name of entity.
-        :param _action: An optional event action.
         :return: A list with entities, optional for a given action.
         """
-        if _action:
-            request = GetActionRequest(event_topic=_topic, event_action=_action)
-            response = self.stub.get_action(request)
-        else:
-            request = GetAllRequest(event_topic=_topic)
-            response = self.stub.get_all(request)
+        request = GetRequest(event_topic=_topic)
+        response = self.stub.get(request)
 
         return json.loads(response.events) if response.events else None
 

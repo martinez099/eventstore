@@ -6,14 +6,12 @@ service EventStore {
   rpc publish (PublishRequest) returns (PublishResponse) {}
   rpc subscribe (SubscribeRequest) returns (stream Notification) {}
   rpc unsubscribe (UnsubscribeRequest) returns (UnsubscribeResponse) {}
-  rpc get_all (GetAllRequest) returns (GetResponse) {}
-  rpc get_action (GetActionRequest) returns (GetResponse) {}
+  rpc get (GetRequest) returns (GetResponse) {}
 }
 
 message PublishRequest {
   string event_topic = 1;
-  string event_action = 2;
-  string event_data = 3;
+  string event_info = 2;
 }
 
 message PublishResponse {
@@ -40,13 +38,8 @@ message UnsubscribeResponse {
   bool success = 1;
 }
 
-message GetAllRequest {
+message GetRequest {
   string event_topic = 1;
-}
-
-message GetActionRequest {
-  string event_topic = 1;
-  string event_action = 2;
 }
 
 message GetResponse {

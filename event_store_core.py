@@ -1,7 +1,5 @@
-import json
 import threading
 import time
-import uuid
 
 from redis import StrictRedis
 
@@ -19,27 +17,19 @@ class EventStore(object):
         self.redis = StrictRedis(decode_responses=True, host=host, port=port)
         self.subscribers = {}
 
-    def publish(self, _topic, _action, _data):
+    def publish(self, _topic, _info):
         """
         Publish an event.
 
         :param _topic: The event topic.
-        :param _action: The event action.
-        :param _data: The event data.
+        :param _info: A dict with the event information.
         :return: The entry ID.
         """
-        key = f'events:{_topic}'
-        entry_id = self.redis.xadd(
-            key,
-            {
-                'event_id': str(uuid.uuid4()),
-                'event_action': _action,
-                'event_data': json.dumps(_data)
-            },
+        return self.redis.xadd(
+            f'events:{_topic}',
+            _info,
             id='{0:.6f}'.format(time.time()).replace('.', '-')
         )
-
-        return entry_id
 
     def subscribe(self, _topic, _handler):
         """
@@ -88,18 +78,14 @@ class EventStore(object):
         """
         return self.redis.xread({f'events:{_topic}': _last_id}, block=_block)
 
-    def get(self, _topic, _action=None):
+    def get(self, _topic):
         """
-        Get all events for a topic, optional for a given action.
+        Get all events for a topic.
 
         :param _topic: The event topic.
-        :param _action: The event action, defaults to None (i.e. all events).
         :return:
         """
-        all_events = self.redis.xrange(f'events:{_topic}')
-        if _action:
-            return list(filter(lambda x: x[1]['event_action'] == _action, all_events))
-        return all_events
+        return self.redis.xrange(f'events:{_topic}')
 
 
 class Subscriber(threading.Thread):
@@ -136,7 +122,6 @@ class Subscriber(threading.Thread):
             for item in self._read_stream():
                 for handler in self.handlers:
                     handler(item)
-
         self._running = False
 
     def stop(self):

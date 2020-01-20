@@ -29,14 +29,9 @@ class EventStoreStub(object):
         request_serializer=event__store__pb2.UnsubscribeRequest.SerializeToString,
         response_deserializer=event__store__pb2.UnsubscribeResponse.FromString,
         )
-    self.get_all = channel.unary_unary(
-        '/eventstore.EventStore/get_all',
-        request_serializer=event__store__pb2.GetAllRequest.SerializeToString,
-        response_deserializer=event__store__pb2.GetResponse.FromString,
-        )
-    self.get_action = channel.unary_unary(
-        '/eventstore.EventStore/get_action',
-        request_serializer=event__store__pb2.GetActionRequest.SerializeToString,
+    self.get = channel.unary_unary(
+        '/eventstore.EventStore/get',
+        request_serializer=event__store__pb2.GetRequest.SerializeToString,
         response_deserializer=event__store__pb2.GetResponse.FromString,
         )
 
@@ -66,14 +61,7 @@ class EventStoreServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def get_all(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def get_action(self, request, context):
+  def get(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -98,14 +86,9 @@ def add_EventStoreServicer_to_server(servicer, server):
           request_deserializer=event__store__pb2.UnsubscribeRequest.FromString,
           response_serializer=event__store__pb2.UnsubscribeResponse.SerializeToString,
       ),
-      'get_all': grpc.unary_unary_rpc_method_handler(
-          servicer.get_all,
-          request_deserializer=event__store__pb2.GetAllRequest.FromString,
-          response_serializer=event__store__pb2.GetResponse.SerializeToString,
-      ),
-      'get_action': grpc.unary_unary_rpc_method_handler(
-          servicer.get_action,
-          request_deserializer=event__store__pb2.GetActionRequest.FromString,
+      'get': grpc.unary_unary_rpc_method_handler(
+          servicer.get,
+          request_deserializer=event__store__pb2.GetRequest.FromString,
           response_serializer=event__store__pb2.GetResponse.SerializeToString,
       ),
   }

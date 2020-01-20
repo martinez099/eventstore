@@ -95,6 +95,21 @@ def create_product():
     }
 
 
+def create_event(_action, _data):
+    """
+    Create an event.
+
+    :param _action: The event action.
+    :param _data: A dict with the event data.
+    :return: A dict holding the event information.
+    """
+    return {
+        'event_id': str(uuid.uuid4()),
+        'event_action': _action,
+        'event_data': json.dumps(_data)
+    }
+
+
 es = EventStoreClient()
 
 customers = [create_customer() for _ in range(0, 100)]
@@ -104,31 +119,34 @@ orders = [create_order(customers, products) for _ in range(0, 100)]
 billings = [create_billing(order['id']) for order in orders]
 
 for customer in customers:
-    es.publish('customer', 'entity_created', customer)
+    es.publish('customer', create_event('entity_created', customer))
 
 for product in products:
-    es.publish('product', 'entity_created', product)
+    es.publish('product', create_event('entity_created', product))
 
 for inventory in inventory:
-    es.publish('inventory', 'entity_created', inventory)
+    es.publish('inventory', create_event('entity_created', inventory))
 
 for order in orders:
-    es.publish('order', 'entity_created', order)
+    es.publish('order', create_event('entity_created', order))
 
 for billing in billings:
-    es.publish('billing', 'entity_created', billing)
+    es.publish('billing', create_event('entity_created', billing))
 
 
 def order_service():
 
     # delete first order
-    es.publish('order', 'entity_deleted', orders[0])
+    es.publish('order', create_event('entity_deleted', orders[0]))
+
+    # get all order events
+    order_events = es.get('order')
 
     # get 'created' events
-    created = es.get('order', _action='entity_created')
+    created = filter(lambda x: x[1]['event_action'] == 'entity_created', order_events)
 
     # get 'deleted' events
-    deleted = es.get('order', _action='entity_deleted')
+    deleted = filter(lambda x: x[1]['event_action'] == 'entity_deleted', order_events)
 
     # filter current order entities
     result = filter(lambda r: json.loads(r[1]['event_data'])['id']
