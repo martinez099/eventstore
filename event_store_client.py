@@ -55,7 +55,7 @@ def deduce_entities(_events):
     return created
 
 
-def keep_track(_entities, _event):
+def track_entities(_entities, _event):
     """
     Keep track of entity events.
 

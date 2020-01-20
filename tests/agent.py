@@ -5,7 +5,7 @@ import threading
 import time
 import uuid
 
-from event_store_client import EventStoreClient, create_event, deduce_entities, keep_track
+from event_store_client import EventStoreClient, create_event, deduce_entities, track_entities
 
 
 def get_any_id(_entities, _but=None):
@@ -147,7 +147,7 @@ def order_service(_es):
     assert len(order_entities[orders[1]['entity_id']]['product_ids']) == len(orders[1]['product_ids'])
 
     # create handler function
-    tracking_handler = functools.partial(keep_track, order_entities)
+    tracking_handler = functools.partial(track_entities, order_entities)
 
     # subscribe to topic
     _es.subscribe('order', tracking_handler)
