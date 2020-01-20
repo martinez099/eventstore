@@ -20,7 +20,7 @@ def get_any_id(_entities, _but=None):
     while not _id:
         idx = random.randrange(len(_entities))
         entity = _entities[idx]
-        _id = entity['id'] if entity['id'] != _but else None
+        _id = entity['entity_id'] if entity['entity_id'] != _but else None
     return _id
 
 
@@ -32,7 +32,7 @@ def create_billing(_order_id):
     :return: A dict with the entity properties.
     """
     return {
-        'id': str(uuid.uuid4()),
+        'entity_id': str(uuid.uuid4()),
         'order_id': _order_id,
         'done': time.time()
     }
@@ -47,7 +47,7 @@ def create_order(_customers, _products):
     :return: A dict with the entity properties.
     """
     return {
-        'id': str(uuid.uuid4()),
+        'entity_id': str(uuid.uuid4()),
         'product_ids': [get_any_id(_products) for _ in range(random.randint(1, 10))],
         'customer_id': get_any_id(_customers)
     }
@@ -62,7 +62,7 @@ def create_inventory(_product_id, _amount):
     :return: A dict with the entity properties.
     """
     return {
-        'id': str(uuid.uuid4()),
+        'entity_id': str(uuid.uuid4()),
         'product_id': _product_id,
         'amount': _amount
     }
@@ -76,7 +76,7 @@ def create_customer():
     """
     name = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
     return {
-        'id': str(uuid.uuid4()),
+        'entity_id': str(uuid.uuid4()),
         'name': name.title(),
         'email': "{}@server.com".format(name)
     }
@@ -89,7 +89,7 @@ def create_product():
     :return: A dict with the entity properties.
     """
     return {
-        'id': str(uuid.uuid4()),
+        'entity_id': str(uuid.uuid4()),
         'name': "".join(random.choice(string.ascii_lowercase) for _ in range(10)),
         'price': random.randint(10, 1000)
     }
@@ -114,9 +114,9 @@ es = EventStoreClient()
 
 customers = [create_customer() for _ in range(0, 100)]
 products = [create_product() for _ in range(0, 100)]
-inventory = [create_inventory(product['id'], 1000) for product in products]
+inventory = [create_inventory(product['entity_id'], 1000) for product in products]
 orders = [create_order(customers, products) for _ in range(0, 100)]
-billings = [create_billing(order['id']) for order in orders]
+billings = [create_billing(order['entity_id']) for order in orders]
 
 for customer in customers:
     es.publish('customer', create_event('entity_created', customer))
@@ -134,6 +134,39 @@ for billing in billings:
     es.publish('billing', create_event('entity_created', billing))
 
 
+def deduce_entities(_events):
+
+    result = []
+
+    # get 'created' events
+    created = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
+               for e in filter(lambda x: x[1]['event_action'] == 'entity_created', _events)}
+
+    # get 'deleted' events
+    deleted = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
+               for e in filter(lambda x: x[1]['event_action'] == 'entity_deleted', _events)}
+
+    # get 'updated' events
+    updated = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
+               for e in filter(lambda x: x[1]['event_action'] == 'entity_updated', _events)}
+
+    for c_id, c_data in created.items():
+
+        # skip 'deleted' entities
+        if c_id in deleted:
+            continue
+
+        # set 'updated' entities
+        if c_id in updated:
+            result.append(updated[c_id])
+
+        else:
+            # add 'created' entities
+            result.append(c_data)
+
+    return result
+
+
 def order_service():
 
     # delete first order
@@ -142,18 +175,24 @@ def order_service():
     # get all order events
     order_events = es.get('order')
 
-    # get 'created' events
-    created = filter(lambda x: x[1]['event_action'] == 'entity_created', order_events)
+    # deduce entities
+    order_entities = deduce_entities(order_events)
 
-    # get 'deleted' events
-    deleted = filter(lambda x: x[1]['event_action'] == 'entity_deleted', order_events)
+    # check result
+    assert len(order_entities) == 99
 
-    # filter current order entities
-    result = filter(lambda r: json.loads(r[1]['event_data'])['id']
-                    not in map(lambda y: json.loads(y[1]['event_data'])['id'], deleted),
-                    created)
+    # remnove last product from second order
+    orders[1]['product_ids'] = orders[1]['product_ids'][:-1]
+    es.publish('order', create_event('entity_updated', orders[1]))
 
-    assert len(list(result)) == 99
+    # get all order events
+    order_events = es.get('order')
+
+    # deduce entities
+    order_entities = deduce_entities(order_events)
+
+    # check result
+    assert len(order_entities[0]['product_ids']) == len(orders[1]['product_ids'])
 
 
 t1 = threading.Thread(target=order_service)
