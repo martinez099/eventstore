@@ -67,19 +67,19 @@ def track_entities(_entities, _event):
     """
     if _event.event_action == 'entity_created':
         event_data = json.loads(_event.event_data)
-        if _entities[event_data['entity_id']]:
+        if event_data['entity_id'] in _entities:
             raise Exception('could not deduce created event')
         _entities[event_data['entity_id']] = event_data
 
     if _event.event_action == 'entity_deleted':
         event_data = json.loads(_event.event_data)
-        if not _entities[event_data['entity_id']]:
+        if event_data['entity_id'] not in _entities:
             raise Exception('could not deduce deleted event')
         del _entities[event_data['entity_id']]
 
     if _event.event_action == 'entity_updated':
         event_data = json.loads(_event.event_data)
-        if not _entities[event_data['entity_id']]:
+        if event_data['entity_id'] not in _entities:
             raise Exception('could not deduce updated event')
         _entities[event_data['entity_id']] = event_data
 
