@@ -1,11 +1,12 @@
 import json
 import random
+import functools
 import string
 import threading
 import time
 import uuid
 
-from event_store_client import EventStoreClient
+from event_store_client import EventStoreClient, create_event, deduce_entities
 
 
 def get_any_id(_entities, _but=None):
@@ -95,21 +96,6 @@ def create_product():
     }
 
 
-def create_event(_action, _data):
-    """
-    Create an event.
-
-    :param _action: The event action.
-    :param _data: A dict with the event data.
-    :return: A dict holding the event information.
-    """
-    return {
-        'event_id': str(uuid.uuid4()),
-        'event_action': _action,
-        'event_data': json.dumps(_data)
-    }
-
-
 es = EventStoreClient()
 
 customers = [create_customer() for _ in range(0, 100)]
@@ -132,39 +118,6 @@ for order in orders:
 
 for billing in billings:
     es.publish('billing', create_event('entity_created', billing))
-
-
-def deduce_entities(_events):
-
-    result = []
-
-    # get 'created' events
-    created = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
-               for e in filter(lambda x: x[1]['event_action'] == 'entity_created', _events)}
-
-    # get 'deleted' events
-    deleted = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
-               for e in filter(lambda x: x[1]['event_action'] == 'entity_deleted', _events)}
-
-    # get 'updated' events
-    updated = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
-               for e in filter(lambda x: x[1]['event_action'] == 'entity_updated', _events)}
-
-    for c_id, c_data in created.items():
-
-        # skip 'deleted' entities
-        if c_id in deleted:
-            continue
-
-        # set 'updated' entities
-        if c_id in updated:
-            result.append(updated[c_id])
-
-        else:
-            # add 'created' entities
-            result.append(c_data)
-
-    return result
 
 
 def order_service():
@@ -192,7 +145,31 @@ def order_service():
     order_entities = deduce_entities(order_events)
 
     # check result
-    assert len(order_entities[0]['product_ids']) == len(orders[1]['product_ids'])
+    assert len(order_entities[orders[1]['entity_id']]['product_ids']) == len(orders[1]['product_ids'])
+
+    def keep_track(_rm, _event):
+        event_action = _event.event_action
+        if event_action == 'entity_created' or event_action == 'entity_updated':
+            event_data = json.loads(_event.event_data)
+            _rm[event_data['entity_id']] = event_data
+        if event_action == 'entity_deleted':
+            event_data = json.loads(_event.event_data)
+            del _rm[event_data['entity_id']]
+
+    # create handler function
+    handler = functools.partial(keep_track, order_entities)
+
+    # subscribe to topic
+    es.subscribe('order', handler)
+
+    # delete third order
+    es.publish('order', create_event('entity_deleted', orders[2]))
+
+    # check result
+    assert len(order_entities) == 98
+
+    # unsubscribe from topic
+    es.unsubscribe('order', handler)
 
 
 t1 = threading.Thread(target=order_service)

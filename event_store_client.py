@@ -1,6 +1,8 @@
 import json
 import os
 import threading
+import uuid
+
 import grpc
 
 from event_store_pb2 import PublishRequest, SubscribeRequest, GetRequest
@@ -8,6 +10,49 @@ from event_store_pb2_grpc import EventStoreStub
 
 EVENT_STORE_HOSTNAME = os.getenv('EVENT_STORE_HOSTNAME', 'localhost')
 EVENT_STORE_PORTNR = os.getenv('EVENT_STORE_PORTNR', '50051')
+
+
+def create_event(_action, _data):
+    """
+    Create an event.
+
+    :param _action: The event action.
+    :param _data: A dict with the event data.
+    :return: A dict with the event information.
+    """
+    return {
+        'event_id': str(uuid.uuid4()),
+        'event_action': _action,
+        'event_data': json.dumps(_data)
+    }
+
+
+def deduce_entities(_events):
+    """
+    Deduce entities from events.
+
+    :param _events: The event list.
+    :return: A dict mapping entity ID -> entity data.
+    """
+    # get 'created' events
+    created = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
+               for e in filter(lambda x: x[1]['event_action'] == 'entity_created', _events)}
+
+    # del 'deleted' events
+    deleted = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
+               for e in filter(lambda x: x[1]['event_action'] == 'entity_deleted', _events)}
+
+    for d_id, d_data in deleted.items():
+        del created[d_id]
+
+    # set 'updated' events
+    updated = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
+               for e in filter(lambda x: x[1]['event_action'] == 'entity_updated', _events)}
+
+    for u_id, u_data in updated.items():
+        created[u_id] = u_data
+
+    return created
 
 
 class EventStoreClient(object):
