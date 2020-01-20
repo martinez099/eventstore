@@ -31,9 +31,12 @@ def deduce_entities(_events):
     """
     Deduce entities from events.
 
-    :param _events: The event list.
+    :param _events: A list with events.
     :return: A dict mapping entity ID -> entity data.
     """
+    if not _events:
+        return {}
+
     # get 'created' events
     created = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
                for e in filter(lambda x: x[1]['event_action'] == 'entity_created', _events)}
