@@ -29,7 +29,7 @@ class EventStoreServer(EventStoreServicer):
         :param context: The client context.
         :return: An entry ID.
         """
-        entry_id = self.core.publish(request.event_topic, json.loads(request.event_info))
+        entry_id = self.core.add(request.event_topic, json.loads(request.event_info))
 
         return PublishResponse(entry_id=entry_id)
 
@@ -45,7 +45,7 @@ class EventStoreServer(EventStoreServicer):
 
         last_id = '$'
         while self.subscribers[(request.event_topic, context.peer())]:
-            for stream_name, entries in self.core.read(last_id, request.event_topic):
+            for stream_name, entries in self.core.read(request.event_topic, last_id):
                 for entry_id, entry in entries:
                     last_id = entry_id
                     yield Notification(

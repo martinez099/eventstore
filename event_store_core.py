@@ -1,7 +1,9 @@
-import threading
 import time
 
 from redis import StrictRedis
+
+EVENT_STREAM_NAME = 'events:{}'
+EVENT_STREAM_ID = '{0:.6f}'
 
 
 class EventStore(object):
@@ -15,32 +17,20 @@ class EventStore(object):
         :param port: The Redis port.
         """
         self.redis = StrictRedis(decode_responses=True, host=host, port=port)
-        self.subscribers = {}
 
-    def publish(self, _topic, _info):
+    def add(self, _topic, _info):
         """
-        Publish an event.
+        Add an event to the stream.
 
         :param _topic: The event topic.
         :param _info: A dict with the event information.
-        :return: The entry ID.
+        :return: The entry ID, i.e. timestamp in ms.
         """
         return self.redis.xadd(
-            f'events:{_topic}',
+            EVENT_STREAM_NAME.format(_topic),
             _info,
-            id='{0:.6f}'.format(time.time()).replace('.', '-')
+            id=EVENT_STREAM_ID.format(time.time()).replace('.', '-')
         )
-
-    def read(self, _last_id, _topic, _block=100):
-        """
-        Read new event stream entries.
-
-        :param _last_id: The ID of the last entry read.
-        :param _topic: The event topic.
-        :param _block: The time to block in ms or None, defaults to 1000.
-        :return: A list of event entries or None.
-        """
-        return self.redis.xread({f'events:{_topic}': _last_id}, block=_block)
 
     def get(self, _topic):
         """
@@ -49,4 +39,15 @@ class EventStore(object):
         :param _topic: The event topic.
         :return:
         """
-        return self.redis.xrange(f'events:{_topic}')
+        return self.redis.xrange(EVENT_STREAM_NAME.format(_topic))
+
+    def read(self, _topic, _last_id, _block=100):
+        """
+        Read new event stream entries.
+
+        :param _topic: The event topic.
+        :param _last_id: The ID of the last entry read.
+        :param _block: The time to block in ms, defaults to 100.
+        :return: A list of event entries or None.
+        """
+        return self.redis.xread({EVENT_STREAM_NAME.format(_topic): _last_id}, block=_block)
