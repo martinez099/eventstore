@@ -1,8 +1,9 @@
 import json
 import logging
 import os
+import signal
 import time
-from concurrent import futures
+from concurrent.futures import ThreadPoolExecutor
 
 import grpc
 
@@ -85,15 +86,16 @@ EVENT_STORE_LISTEN_PORT = os.getenv('EVENT_STORE_LISTEN_PORT', '50051')
 EVENT_STORE_MAX_WORKERS = int(os.getenv('EVENT_STORE_MAX_WORKERS', '10'))
 
 EVENT_STORE_ADDRESS = '[::]:{}'.format(EVENT_STORE_LISTEN_PORT)
-EVENT_STORE_SLEEP_INTERVAL = 60 * 60 * 24
+EVENT_STORE_SLEEP_INTERVAL = 1
 EVENT_STORE_GRACE_INTERVAL = 0
+EVENT_STORE_RUNNING = True
 
 
 def serve():
     """
     Run the gRPC server.
     """
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=EVENT_STORE_MAX_WORKERS))
+    server = grpc.server(ThreadPoolExecutor(max_workers=EVENT_STORE_MAX_WORKERS))
     try:
         add_EventStoreServicer_to_server(EventStoreServer(), server)
         server.add_insecure_port(EVENT_STORE_ADDRESS)
@@ -103,7 +105,7 @@ def serve():
 
     logging.info('serving ...')
     try:
-        while True:
+        while EVENT_STORE_RUNNING:
             time.sleep(EVENT_STORE_SLEEP_INTERVAL)
     except (InterruptedError, KeyboardInterrupt):
         server.stop(EVENT_STORE_GRACE_INTERVAL)
@@ -111,6 +113,18 @@ def serve():
     logging.info('done.')
 
 
+def stop():
+    """
+    Stop the gRPC server.
+    """
+    global EVENT_STORE_RUNNING
+    EVENT_STORE_RUNNING = False
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+
+    signal.signal(signal.SIGINT, lambda n, h: stop())
+    signal.signal(signal.SIGTERM, lambda n, h: stop())
+
     serve()
