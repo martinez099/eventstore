@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import threading
 import uuid
@@ -38,24 +39,24 @@ def deduce_entities(_events):
         return {}
 
     # get 'created' events
-    created = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
-               for e in filter(lambda x: x[1]['event_action'] == 'entity_created', _events)}
+    result = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
+              for e in filter(lambda x: x[1]['event_action'] == 'entity_created', _events)}
 
     # del 'deleted' events
     deleted = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
                for e in filter(lambda x: x[1]['event_action'] == 'entity_deleted', _events)}
 
     for d_id, d_data in deleted.items():
-        del created[d_id]
+        del result[d_id]
 
     # set 'updated' events
     updated = {json.loads(e[1]['event_data'])['entity_id']: json.loads(e[1]['event_data'])
                for e in filter(lambda x: x[1]['event_action'] == 'entity_updated', _events)}
 
     for u_id, u_data in updated.items():
-        created[u_id] = u_data
+        result[u_id] = u_data
 
-    return created
+    return result
 
 
 def track_entities(_entities, _event):
@@ -194,7 +195,13 @@ class Subscriber(threading.Thread):
         self._running = True
         for item in self.stub.subscribe(SubscribeRequest(event_topic=self.topic)):
             for handler in self.handlers:
-                handler(item)
+                try:
+                    handler(item)
+                except Exception as e:
+                    logging.error('error calling handler function ({}) for {}.{}: {}'.format(e.__class__.__name__,
+                                                                                             self.topic,
+                                                                                             handler.__name__,
+                                                                                             str(e)))
         self._running = False
 
     def add_handler(self, _handler):
