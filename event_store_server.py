@@ -46,7 +46,7 @@ class EventStoreServer(EventStoreServicer):
 
         last_id = '$'
         while self.subscribers[(request.event_topic, context.peer())]:
-            for stream_name, entries in self.core.read(request.event_topic, last_id):
+            for stream_name, entries in self.core.read(request.event_topic, context.peer(), last_id):
                 for entry_id, entry in entries:
                     last_id = entry_id
                     yield Notification(

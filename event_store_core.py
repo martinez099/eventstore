@@ -1,6 +1,6 @@
 import time
 
-from redis import StrictRedis
+import redis
 
 EVENT_STREAM_NAME = 'events:{}'
 EVENT_STREAM_ID = '{0:.6f}'
@@ -16,7 +16,7 @@ class EventStore(object):
         :param host: The Redis host.
         :param port: The Redis port.
         """
-        self.redis = StrictRedis(decode_responses=True, host=host, port=port)
+        self.redis = redis.StrictRedis(decode_responses=True, host=host, port=port)
 
     def add(self, _topic, _info):
         """
@@ -41,13 +41,16 @@ class EventStore(object):
         """
         return self.redis.xrange(EVENT_STREAM_NAME.format(_topic))
 
-    def read(self, _topic, _last_id, _block=100):
+    def read(self, _topic, _name, _last_id, _block=100):
         """
         Read new event stream entries.
 
         :param _topic: The event topic.
+        :param _name: The name of the consumer.
         :param _last_id: The ID of the last entry read.
         :param _block: The time to block in ms, defaults to 100.
-        :return: A list of event entries or None.
+        :return: A list of event entries or None if timed out.
         """
-        return self.redis.xread({EVENT_STREAM_NAME.format(_topic): _last_id}, block=_block)
+        self.redis.xgroup_create(_name, _topic, mkstream=True)
+
+        return self.redis.xreadgroup(_topic, _name, {EVENT_STREAM_NAME.format(_topic): _last_id}, block=_block)

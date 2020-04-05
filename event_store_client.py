@@ -96,10 +96,10 @@ class EventStoreClient(object):
 
     def get(self, _topic):
         """
-        Get events for a topic, optional for a given action.
+        Get events for a topic.
 
-        :param _topic: The event topic, i.e name of entity.
-        :return: A list with entities, optional for a given action.
+        :param _topic: The event topic, i.e name of event stream.
+        :return: A list with entities.
         """
         response = self.stub.get(GetRequest(event_topic=_topic))
 
