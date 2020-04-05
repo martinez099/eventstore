@@ -120,7 +120,13 @@ for billing in billings:
 
 def order_service(_es):
 
-    # delete first order
+    def order_handler(_order):
+        print('order received {}'.format(_order))
+
+    # subscribe to event
+    _es.subscribe('order', lambda x: print(f'order received {x}'))
+
+    # publish event
     _es.publish('order', create_event('entity_deleted', orders[0]))
 
     # get all order events
@@ -128,6 +134,8 @@ def order_service(_es):
 
     # check result
     assert len(order_events) == 101
+
+    time.sleep(1)
 
 
 t1 = threading.Thread(target=order_service, args=(es,))

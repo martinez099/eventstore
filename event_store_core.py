@@ -41,16 +41,22 @@ class EventStore(object):
         """
         return self.redis.xrange(EVENT_STREAM_NAME.format(_topic))
 
-    def read(self, _topic, _name, _last_id, _block=100):
+    def read(self, _topic, _name, _last_id=None, _block=1000):
         """
         Read new event stream entries.
 
         :param _topic: The event topic.
         :param _name: The name of the consumer.
-        :param _last_id: The ID of the last entry read.
-        :param _block: The time to block in ms, defaults to 100.
+        :param _last_id: Optional ID of the last entry read.
+        :param _block: The time to block in ms, defaults to 1000.
         :return: A list of event entries or None if timed out.
         """
-        self.redis.xgroup_create(_name, _topic, mkstream=True)
+        last_id = _last_id if _last_id else '>'
 
-        return self.redis.xreadgroup(_topic, _name, {EVENT_STREAM_NAME.format(_topic): _last_id}, block=_block)
+        try:
+            self.redis.xgroup_create(EVENT_STREAM_NAME.format(_topic), _topic, mkstream=True)
+        except redis.ResponseError as e:
+            if 'BUSYGROUP' not in e.args[0]:
+                raise e
+
+        return self.redis.xreadgroup(_topic, _name, {EVENT_STREAM_NAME.format(_topic): last_id}, block=_block)

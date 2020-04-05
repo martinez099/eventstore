@@ -44,7 +44,7 @@ class EventStoreServer(EventStoreServicer):
         """
         self.subscribers[(request.event_topic, context.peer())] = True
 
-        last_id = '$'
+        last_id = None
         while self.subscribers[(request.event_topic, context.peer())]:
             for stream_name, entries in self.core.read(request.event_topic, context.peer(), last_id):
                 for entry_id, entry in entries:
