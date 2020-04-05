@@ -1,11 +1,10 @@
 import random
-import functools
 import string
 import threading
 import time
 import uuid
 
-from event_store_client import EventStoreClient, create_event, deduce_entities, track_entities
+from event_store_client import EventStoreClient, create_event
 
 
 def get_any_id(_entities, _but=None):
@@ -127,45 +126,8 @@ def order_service(_es):
     # get all order events
     order_events = _es.get('order')
 
-    # deduce entities
-    order_entities = deduce_entities(order_events)
-
     # check result
-    assert len(order_entities) == 99
-
-    # remnove last product from second order
-    orders[1]['product_ids'] = orders[1]['product_ids'][:-1]
-    _es.publish('order', create_event('entity_updated', orders[1]))
-
-    # get all order events
-    order_events = _es.get('order')
-
-    # deduce entities
-    order_entities = deduce_entities(order_events)
-
-    # check result
-    assert len(order_entities[orders[1]['entity_id']]['product_ids']) == len(orders[1]['product_ids'])
-
-    # create handler function
-    tracking_handler = functools.partial(track_entities, order_entities)
-
-    # subscribe to topic
-    _es.subscribe('order', tracking_handler)
-
-    # delete third order
-    _es.publish('order', create_event('entity_deleted', orders[2]))
-
-    # sync
-    time.sleep(.1)
-
-    # check result
-    assert len(order_entities) == 98
-
-    # unsubscribe from topic
-    _es.unsubscribe('order', tracking_handler)
-
-    # sync
-    time.sleep(.1)
+    assert len(order_events) == 101
 
 
 t1 = threading.Thread(target=order_service, args=(es,))
