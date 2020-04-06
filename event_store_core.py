@@ -41,22 +41,55 @@ class EventStore(object):
         """
         return self.redis.xrange(EVENT_STREAM_NAME.format(_topic))
 
-    def read(self, _topic, _name, _last_id=None, _block=1000):
+    def read(self, _topic, _last_id=None, _block=1000):
+        """
+        Read from a stream. This is a blocking operation.
+
+        :param _topic:
+        :param _last_id:
+        :param _block:
+        :return:
+        """
+        last_id = _last_id if _last_id else '$'
+
+        return self.redis.xread({EVENT_STREAM_NAME.format(_topic): last_id}, block=_block)
+
+    def create_group(self, _topic, _name):
+        """
+        Create a consumer group, ignore if already exists.
+
+        :param _topic:
+        :param _name:
+        :return:
+        """
+        try:
+            self.redis.xgroup_create(EVENT_STREAM_NAME.format(_topic), _name, mkstream=True)
+        except redis.ResponseError as e:
+            if 'BUSYGROUP' not in e.args[0]:
+                raise e
+
+    def read_group(self, _topic, _name, _group, _block=1000, _no_ack=False):
         """
         Read new event stream entries.
 
         :param _topic: The event topic.
         :param _name: The name of the consumer.
-        :param _last_id: Optional ID of the last entry read.
+        :param _group: The consumer group name.
         :param _block: The time to block in ms, defaults to 1000.
+        :param _no_ack: Boolean if acknowledge is required.
         :return: A list of event entries or None if timed out.
         """
-        last_id = _last_id if _last_id else '>'
+        return self.redis.xreadgroup(
+            _group, _name, {EVENT_STREAM_NAME.format(_topic): '>'}, block=_block, noack=_no_ack
+        )
 
-        try:
-            self.redis.xgroup_create(EVENT_STREAM_NAME.format(_topic), _topic, mkstream=True)
-        except redis.ResponseError as e:
-            if 'BUSYGROUP' not in e.args[0]:
-                raise e
+    def ack_group(self, _topic, _group, _ids):
+        """
+        Acknowledge processing of a group event.
 
-        return self.redis.xreadgroup(_topic, _name, {EVENT_STREAM_NAME.format(_topic): last_id}, block=_block)
+        :param _topic:
+        :param _group:
+        :param _ids:
+        :return:
+        """
+        return self.redis.xack(EVENT_STREAM_NAME.format(_topic), _group, _ids)

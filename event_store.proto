@@ -20,6 +20,7 @@ message PublishResponse {
 
 message SubscribeRequest {
   string event_topic = 1;
+  string group_name = 2;
 }
 
 message Notification {

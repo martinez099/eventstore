@@ -57,18 +57,19 @@ class EventStoreClient(object):
 
         return response.entry_id
 
-    def subscribe(self, _topic, _handler):
+    def subscribe(self, _topic, _handler, _group=None):
         """
         Subscribe to an event topic.
 
         :param _topic: The event topic.
         :param _handler: The event handler.
+        :param _group: Optional group name.
         :return: Success.
         """
         if _topic in self.subscribers:
             self.subscribers[_topic].add_handler(_handler)
         else:
-            subscriber = Subscriber(_topic, _handler, self.stub)
+            subscriber = Subscriber(_topic, _handler, self.stub, _group)
             subscriber.start()
             self.subscribers[_topic] = subscriber
 
@@ -111,16 +112,18 @@ class Subscriber(threading.Thread):
     Subscriber Thread class.
     """
 
-    def __init__(self, _topic, _handler, _stub):
+    def __init__(self, _topic, _handler, _stub, _group=None):
         """
         :param _topic: The topic to subscirbe to.
         :param _handler: A handler function.
+        :param _group: The name of the subscriber.
         """
         super(Subscriber, self).__init__()
         self._running = False
         self.handlers = [_handler]
         self.topic = _topic
         self.stub = _stub
+        self.group = _group
 
     def __len__(self):
         return len(self.handlers)
@@ -133,15 +136,18 @@ class Subscriber(threading.Thread):
             return
 
         self._running = True
-        for item in self.stub.subscribe(SubscribeRequest(event_topic=self.topic)):
+        for item in self.stub.subscribe(
+                SubscribeRequest(event_topic=self.topic, group_name=self.group)):
             for handler in self.handlers:
                 try:
                     handler(item)
                 except Exception as e:
-                    logging.error('error calling handler function ({}) for {}.{}: {}'.format(e.__class__.__name__,
-                                                                                             self.topic,
-                                                                                             handler.__name__,
-                                                                                             str(e)))
+                    logging.error(
+                        'error calling handler function ({}) for {}.{}: {}'.format(
+                            e.__class__.__name__, self.topic, handler.__name__, str(e)
+                        )
+                    )
+
         self._running = False
 
     def add_handler(self, _handler):

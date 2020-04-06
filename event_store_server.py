@@ -44,9 +44,22 @@ class EventStoreServer(EventStoreServicer):
         """
         self.subscribers[(request.event_topic, context.peer())] = True
 
+        if request.group_name:
+            self.core.create_group(request.event_topic, request.group_name)
+
         last_id = None
         while self.subscribers[(request.event_topic, context.peer())]:
-            for stream_name, entries in self.core.read(request.event_topic, context.peer(), last_id):
+
+            if request.group_name:
+                result = self.core.read_group(
+                    request.event_topic, context.peer(), request.group_name, _no_ack=True
+                )
+            else:
+                result = self.core.read(
+                    request.event_topic, last_id
+                )
+
+            for stream_name, entries in result:
                 for entry_id, entry in entries:
                     last_id = entry_id
                     yield Notification(

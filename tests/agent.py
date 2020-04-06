@@ -20,6 +20,7 @@ def get_any_id(_entities, _but=None):
         idx = random.randrange(len(_entities))
         entity = _entities[idx]
         _id = entity['entity_id'] if entity['entity_id'] != _but else None
+
     return _id
 
 
@@ -74,6 +75,7 @@ def create_customer():
     :return: A dict with the entity properties.
     """
     name = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
+
     return {
         'entity_id': str(uuid.uuid4()),
         'name': name.title(),
@@ -117,17 +119,14 @@ for order in orders:
 for billing in billings:
     es.publish('billing', create_event('entity_created', billing))
 
+# subscribe to event
+es.subscribe('order', lambda x: print(f'order received {x}'), _group='order-service')
+
 
 def order_service(_es):
 
-    def order_handler(_order):
-        print('order received {}'.format(_order))
-
-    # subscribe to event
-    _es.subscribe('order', lambda x: print(f'order received {x}'))
-
     # publish event
-    _es.publish('order', create_event('entity_deleted', orders[0]))
+    es.publish('order', create_event('entity_deleted', orders[0]))
 
     # get all order events
     order_events = _es.get('order')
