@@ -70,7 +70,7 @@ class EventStore(object):
 
     def read_group(self, _topic, _name, _group, _block=1000, _no_ack=False):
         """
-        Read new event stream entries.
+        Read new event stream entries from a group.
 
         :param _topic: The event topic.
         :param _name: The name of the consumer.
