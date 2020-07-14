@@ -19,7 +19,7 @@ class EventStoreServer(EventStoreServicer):
     """
 
     def __init__(self):
-        self.core = EventStore(EVENT_STORE_REDIS_HOST)
+        self.core = EventStore(EVENT_STORE_REDIS_HOST, EVENT_STORE_REDIS_PORT)
         self.subscribers = {}
 
     def publish(self, request, context):
@@ -95,6 +95,7 @@ class EventStoreServer(EventStoreServicer):
 
 
 EVENT_STORE_REDIS_HOST = os.getenv('EVENT_STORE_REDIS_HOST', 'localhost')
+EVENT_STORE_REDIS_PORT = os.getenv('EVENT_STORE_REDIS_PORT', 6379)
 EVENT_STORE_LISTEN_PORT = os.getenv('EVENT_STORE_LISTEN_PORT', '50051')
 EVENT_STORE_MAX_WORKERS = int(os.getenv('EVENT_STORE_MAX_WORKERS', '10'))
 
